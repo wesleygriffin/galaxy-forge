@@ -297,13 +297,35 @@
     display: none;
   }
   #tile-menu.show { display: block; }
+  .menu-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 2px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .menu-close:hover { color: var(--amber-bright); border-color: var(--amber-dim); }
   .menu-title {
     font-size: 13px; color: var(--amber-bright);
     font-weight: 600; margin-bottom: 2px; letter-spacing: 0.05em;
+    padding-right: 28px; /* leave room for close button */
   }
   .menu-meta {
     font-size: 10px; color: var(--text-dim);
     text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;
+    padding-right: 28px;
   }
   .planet-line {
     font-size: 11px; color: var(--text);
@@ -1527,6 +1549,7 @@ function showTileMenu(key, tileId, cx, cy) {
   }
 
   menu.innerHTML = `
+    <button class="menu-close" data-act="close" aria-label="Close">×</button>
     <div class="menu-title">${sys.name}</div>
     <div class="menu-meta">Tile ${tileId} · ${sys.expansion.toUpperCase()} · ${sys.type}${sys.faction ? ' · ' + sys.faction : ''}</div>
     ${planetsHtml}${anomaliesHtml}${whHtml}
@@ -1595,6 +1618,7 @@ function showTileMenu(key, tileId, cx, cy) {
     btn.onclick = (e) => {
       e.stopPropagation();
       const act = btn.dataset.act;
+      if (act === "close") { hideTileMenu(); return; }
       if (act === "lock") toggleLock(key);
       else if (act === "include") toggleInclude(tileId);
       else if (act === "exclude") toggleExclude(tileId);
