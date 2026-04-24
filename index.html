@@ -203,6 +203,23 @@
     line-height: 1;
   }
   .info-icon:hover { background: var(--amber-dim); color: var(--bg-deep); }
+  .info-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-family: inherit;
+    padding: 6px 0 2px 0;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .info-link:hover { color: var(--amber); }
+  .info-link span { color: var(--amber); font-size: 11px; }
   .info-popup {
     position: fixed;
     background: var(--bg-panel-2);
@@ -576,12 +593,12 @@
       <div class="ctrl-group">
         <details class="collapsible">
           <summary>
-            <span class="collapsible-label">Placement Options<button class="info-icon" data-info="placement-options" aria-label="About placement options">ⓘ</button></span>
-            <span class="collapsible-hint" id="placement-options-hint"></span>
+            <span class="collapsible-label">Placement Options</span>
           </summary>
           <div class="collapsible-body">
             <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
             <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
+            <button class="info-link" data-info="placement-options">About these options <span>ⓘ</span></button>
           </div>
         </details>
       </div>
@@ -2295,14 +2312,6 @@ function syncUIFromState() {
     if (state.expansions.te) active.push("TE");
     expHint.textContent = active.length ? active.join(" · ") : "Base only";
   }
-  // Placement options summary hint
-  const poHint = document.getElementById("placement-options-hint");
-  if (poHint) {
-    const on = [];
-    if (state.shufflePriority) on.push("Shuffle");
-    if (state.reversePlacement) on.push("Reverse");
-    poHint.textContent = on.length ? on.join(" · ") : "Default";
-  }
   // Selects
   document.getElementById("board-style").value = state.boardStyle;
   document.getElementById("placement-style").value = state.placementStyle;
@@ -2467,14 +2476,14 @@ function showInfoPopup(key, anchor) {
   popup.style.top = top + "px";
 }
 
-// Wire up info icons. Use delegation so icons added dynamically (e.g. after
-// sidebar collapse/expand) still work.
+// Wire up info icons and info links. Use delegation so elements added
+// dynamically (e.g. after sidebar collapse/expand) still work.
 document.addEventListener("click", (e) => {
-  const icon = e.target.closest(".info-icon");
-  if (icon) {
+  const trigger = e.target.closest(".info-icon, .info-link");
+  if (trigger) {
     e.stopPropagation();
     e.preventDefault();
-    showInfoPopup(icon.dataset.info, icon);
+    showInfoPopup(trigger.dataset.info, trigger);
     return;
   }
   // Click outside an open popup closes it
