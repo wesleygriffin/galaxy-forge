@@ -1328,6 +1328,7 @@ function renderHex(parent, q, r, key, tileId) {
   // Click handler
   group.addEventListener("click", (e) => {
     e.stopPropagation();
+    if (Date.now() < suppressClickUntil) return; // swallow clicks after double-tap reset
     if (!tileId) return;
     // Tap the same hex again to close the menu (toggle behavior)
     const menuOpen = document.getElementById("tile-menu").classList.contains("show");
@@ -2023,13 +2024,66 @@ function startMomentumFromSamples() {
   momentumAnim = requestAnimationFrame(step);
 }
 
+// ---- Double-tap / double-click to reset view ----
+const DOUBLE_TAP_MS = 350;
+const DOUBLE_TAP_DIST = 40;
+const TAP_SLOP = 10;
+let lastTap = null;           // { x, y, t }
+let suppressClickUntil = 0;   // timestamp before which to swallow synthesized click events
+
+function resetViewAnimated() {
+  cancelMomentum();
+  const startScale = state.viewTransform.scale;
+  const startX = state.viewTransform.x;
+  const startY = state.viewTransform.y;
+  if (Math.abs(startScale - 1) < 0.001 && Math.abs(startX) < 0.5 && Math.abs(startY) < 0.5) {
+    // Already at home — nothing to animate
+    return;
+  }
+  const duration = 280;
+  const startT = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - startT) / duration);
+    const ease = 1 - Math.pow(1 - t, 3); // easeOutCubic
+    state.viewTransform.scale = startScale + (1 - startScale) * ease;
+    state.viewTransform.x = startX + (0 - startX) * ease;
+    state.viewTransform.y = startY + (0 - startY) * ease;
+    applyViewTransform();
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
 function endPointer(e) {
   const hadPan = panStart && activePointers.has(e.pointerId);
+  let tapInfo = null;
+  if (hadPan) {
+    const dx = e.clientX - panStart.x;
+    const dy = e.clientY - panStart.y;
+    if (Math.hypot(dx, dy) < TAP_SLOP) {
+      tapInfo = { x: e.clientX, y: e.clientY, t: Date.now() };
+    }
+  }
   activePointers.delete(e.pointerId);
   if (activePointers.size < 2) pinchStart = null;
   if (activePointers.size === 0) {
-    // If we were mid-pan, fling it
-    if (hadPan) startMomentumFromSamples();
+    if (hadPan && !tapInfo) {
+      // It was a real drag — fling it
+      startMomentumFromSamples();
+    } else if (tapInfo) {
+      // Check for double-tap
+      if (lastTap
+          && tapInfo.t - lastTap.t < DOUBLE_TAP_MS
+          && Math.hypot(tapInfo.x - lastTap.x, tapInfo.y - lastTap.y) < DOUBLE_TAP_DIST) {
+        // Double-tap → reset view with animation
+        resetViewAnimated();
+        hideTileMenu();
+        suppressClickUntil = tapInfo.t + 250;
+        lastTap = null;
+      } else {
+        lastTap = tapInfo;
+      }
+    }
     panSamples = [];
     panStart = null;
     svg.classList.remove("dragging");
@@ -2212,8 +2266,7 @@ document.getElementById("drawer-close").onclick = () => {
   document.getElementById("tool-unused").classList.remove("active");
 };
 document.getElementById("tool-reset-view").onclick = () => {
-  state.viewTransform = { x: 0, y: 0, scale: 1 };
-  render();
+  resetViewAnimated();
 };
 
 // Sidebar collapse toggle (mobile)
@@ -2337,6 +2390,7 @@ document.getElementById("export-btn").onclick = () => {
 
 // Click outside menu to close
 document.addEventListener("click", (e) => {
+  if (Date.now() < suppressClickUntil) return;
   const menu = document.getElementById("tile-menu");
   if (!menu.contains(e.target) && !e.target.closest(".hex-wrapper")) {
     hideTileMenu();
