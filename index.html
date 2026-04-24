@@ -700,6 +700,7 @@
     <button class="tool-btn" id="mobile-settings-btn" title="Settings" aria-label="Open settings">🔧</button>
     <div class="board-tools">
       <button class="tool-btn tool-btn-primary" id="tool-forge" title="Forge new galaxy (keeps locks)">↻</button>
+      <button class="tool-btn" id="tool-respect-locks" title="Respect locked tiles during generation">🔒</button>
       <button class="tool-btn" id="tool-numbers" title="Toggle tile number overlay">#</button>
       <button class="tool-btn" id="tool-unused" title="Show unused tiles">⊞</button>
     </div>
@@ -1087,6 +1088,7 @@ const state = {
   customWeights: { res: 1.0, inf: 1.0, pc: 0.5, tech: 1.0, legend: 2.0, anomaly: -1.0 },
   shufflePriority: false,
   reversePlacement: false,
+  respectLocks: true,       // when false, generation ignores state.locked (but doesn't clear it)
   map: new Map(),           // key "q,r" => tileId
   locked: new Set(),        // keys of locked positions
   includeTiles: new Set(),  // tileIds forced to include
@@ -1191,10 +1193,12 @@ function generateMap() {
     return;
   }
 
-  // Preserve locked tiles from existing map
+  // Preserve locked tiles from existing map (only if lock-respecting is on)
   const lockedMap = new Map();
-  for (const key of state.locked) {
-    if (state.map.has(key)) lockedMap.set(key, state.map.get(key));
+  if (state.respectLocks) {
+    for (const key of state.locked) {
+      if (state.map.has(key)) lockedMap.set(key, state.map.get(key));
+    }
   }
 
   // New map begins with locked tiles + Mecatol at (0,0)
@@ -2443,6 +2447,21 @@ document.getElementById("tool-forge").onclick = (e) => {
   btn.classList.add("spinning");
   generateMap();
 };
+document.getElementById("tool-respect-locks").onclick = (e) => {
+  state.respectLocks = !state.respectLocks;
+  const btn = e.currentTarget;
+  btn.textContent = state.respectLocks ? "🔒" : "🔓";
+  btn.classList.toggle("active", state.respectLocks);
+  btn.title = state.respectLocks
+    ? "Locks ON — locked tiles are preserved when forging"
+    : "Locks OFF — locked tiles will be reshuffled when forging";
+};
+// Set initial visual state for the lock toggle
+(() => {
+  const btn = document.getElementById("tool-respect-locks");
+  btn.textContent = state.respectLocks ? "🔒" : "🔓";
+  btn.classList.toggle("active", state.respectLocks);
+})();
 document.getElementById("tool-numbers").onclick = (e) => {
   state.showNumbers = !state.showNumbers;
   e.currentTarget.classList.toggle("active", state.showNumbers);
