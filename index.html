@@ -651,32 +651,93 @@ const SYSTEMS = {
   91: { name:"Hyperlane", expansion:"pok", type:"hyperlane", back:"special", planets:[] },
 
   // --- Codex III Home Systems ---
+  // Note: Keleres has 3 possible homes (Argent, Xxcha, or Mentak tiles). Using Custodia Vigilia as primary.
   92: { name:"Keleres Home", expansion:"codex", type:"home", back:"green", faction:"Council Keleres",
         planets:[{name:"Custodia Vigilia", res:2, inf:3, legendary:true}] },
 
-  // --- Thunder's Edge (TE) — STRUCTURAL. Values need verification ---
-  // The Fracture systems (reality tiles)
-  101: { name:"Styx", expansion:"te", type:"system", back:"fracture",
-         planets:[{name:"Styx", res:4, inf:0, trait:"hazardous", legendary:true}] },
-  102: { name:"Thunder's Edge", expansion:"te", type:"special", back:"special",
-         planets:[{name:"Thunder's Edge", res:0, inf:0}] },
-  103: { name:"Fracture System", expansion:"te", type:"system", back:"fracture",
-         planets:[{name:"Unknown", res:2, inf:2, trait:"hazardous"}] },
-  104: { name:"Fracture System", expansion:"te", type:"system", back:"fracture",
-         planets:[{name:"Unknown", res:1, inf:3, trait:"hazardous"}] },
-  // TE faction home systems (6 new) — placeholders with representative values
-  111: { name:"TE Home 1", expansion:"te", type:"home", back:"green", faction:"TE Faction 1",
-         planets:[{name:"TE Home A", res:3, inf:2}] },
-  112: { name:"TE Home 2", expansion:"te", type:"home", back:"green", faction:"TE Faction 2",
-         planets:[{name:"TE Home B", res:4, inf:1}] },
-  113: { name:"TE Home 3", expansion:"te", type:"home", back:"green", faction:"TE Faction 3",
-         planets:[{name:"TE Home C", res:2, inf:3}] },
-  114: { name:"TE Home 4", expansion:"te", type:"home", back:"green", faction:"TE Faction 4",
-         planets:[{name:"TE Home D", res:3, inf:3}] },
-  115: { name:"TE Home 5", expansion:"te", type:"home", back:"green", faction:"TE Faction 5",
-         planets:[{name:"TE Home E", res:4, inf:0}] },
-  116: { name:"TE Home 6", expansion:"te", type:"home", back:"green", faction:"TE Faction 6",
-         planets:[{name:"TE Home F", res:2, inf:4}] },
+  // --- Thunder's Edge (TE) Faction Home Systems ---
+  // NOTE: TE has 5 new factions + revised Keleres. Specific tile numbers for each home
+  // are not yet mapped against the physical tiles — using IDs 93-96 as best guess in the
+  // green-backed range. Faction names and starting home characteristics are verified
+  // against the TE rulebook.
+  93: { name:"Ahk Creuxx", expansion:"te", type:"home", back:"green", faction:"The Crimson Rebellion",
+        planets:[{name:"Ahk Creuxx", res:4, inf:2}] }, // off-board through wormhole
+  94: { name:"Cronos/Tallin", expansion:"te", type:"home", back:"green", faction:"The Firmament",
+        planets:[{name:"Cronos", res:2, inf:1},{name:"Tallin", res:1, inf:2}] }, // flips to Cronos Hollow / Tallin Hollow as The Obsidian
+  95: { name:"Deepwrought Home", expansion:"te", type:"home", back:"green", faction:"The Deepwrought Scholarate",
+        planets:[{name:"Deepwrought", res:3, inf:2}] }, // Deepwrought home system — planet values unverified
+  96: { name:"Last Bastion Home", expansion:"te", type:"home", back:"green", faction:"Last Bastion",
+        planets:[{name:"Bastion", res:3, inf:1}] }, // home planet values unverified
+
+  // --- Thunder's Edge System Tiles (92-128 range) ---
+  // Planet values verified from the TE rulebook Map Appendix ("Thunder Dreaming", "Subjugation", "Legendary", "Red vs Blue")
+  // Traits marked "unverified" are estimated; no trait info was extractable from map data.
+  97:  { name:"Faunus", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Faunus", res:3, inf:1, trait:"cultural"}] },
+  98:  { name:"Garbozia", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Garbozia", res:1, inf:2, trait:"cultural"}] },
+  99:  { name:"Emelpar", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Emelpar", res:2, inf:0, trait:"hazardous", legendary:true}] }, // The Acropolis legendary ability
+  100: { name:"Tempesta", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Tempesta", res:1, inf:1, trait:"cultural"}] },
+  101: { name:"Olergodt", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Olergodt", res:1, inf:2, trait:"industrial"}] },
+  102: { name:"Andeara", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Andeara", res:1, inf:1, trait:"cultural"}] },
+  103: { name:"Vira Pics III", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Vira Pics III", res:3, inf:2, trait:"industrial"}] },
+  104: { name:"Lesab", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Lesab", res:1, inf:2, trait:"industrial"}] },
+  105: { name:"Tinnes/Neutera", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Tinnes", res:1, inf:2, trait:"cultural"},{name:"Neutera", res:1, inf:1, trait:"industrial"}] },
+  106: { name:"Lazul Rex/Cresius", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Lazul Rex", res:2, inf:2, trait:"cultural"},{name:"Cresius", res:1, inf:0, trait:"hazardous"}] },
+  107: { name:"Hercalor/Tiamat", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Hercalor", res:0, inf:1, trait:"cultural"},{name:"Tiamat", res:2, inf:1, trait:"hazardous"}] },
+  108: { name:"Capha/Kostboth", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Capha", res:0, inf:3, trait:"cultural"},{name:"Kostboth", res:1, inf:0, trait:"industrial"}] },
+  109: { name:"Tsion Station/Bellatrix", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Tsion Station", res:1, inf:1, trait:"industrial"},{name:"Bellatrix", res:2, inf:1, trait:"cultural"}] }, // Tsion Station is a space station
+  110: { name:"Horizon/Luthien VI/El'Nath", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Horizon", res:0, inf:2, trait:"cultural"},{name:"Luthien VI", res:2, inf:1, trait:"industrial"},{name:"El'Nath", res:1, inf:3, trait:"hazardous"}] },
+  111: { name:"Oluz Station/Tarana", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Oluz Station", res:1, inf:1, trait:"industrial"},{name:"Tarana", res:2, inf:1, trait:"cultural"}] }, // Oluz is a space station
+  112: { name:"Mecatol Rex (Legendary)", expansion:"te", type:"mecatol", back:"special",
+         planets:[{name:"Mecatol Rex", res:1, inf:6, legendary:true}] }, // TE replaces base tile 18 with this
+  115: { name:"Industrex", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Industrex", res:0, inf:2, trait:"industrial"}] },
+  116: { name:"Lemox", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"Lemox", res:3, inf:0, trait:"hazardous"}] },
+  117: { name:"The Watchtower", expansion:"te", type:"system", back:"blue",
+         planets:[{name:"The Watchtower", res:2, inf:0, trait:"industrial"}] },
+
+  // --- TE Red Tiles (anomalies/empty, numbers unverified) ---
+  // Placeholder numbers — actual TE red tile IDs not extracted from rulebook
+  125: { name:"Entropic Scar", expansion:"te", type:"anomaly", back:"red",
+         planets:[], anomalies:["nebula"] }, // Entropic Scar is a new TE anomaly type (UNIT ABILITIES cannot be used inside)
+  126: { name:"TE Empty System", expansion:"te", type:"empty", back:"red", planets:[] },
+  127: { name:"TE Gravity Rift", expansion:"te", type:"anomaly", back:"red", planets:[], anomalies:["gravity-rift"] },
+  128: { name:"TE Asteroid Field", expansion:"te", type:"anomaly", back:"red", planets:[], anomalies:["asteroid-field"] },
+
+  // --- TE Hyperlanes (119A-124A) ---
+  119: { name:"Hyperlane 119", expansion:"te", type:"hyperlane", back:"special", planets:[] },
+  120: { name:"Hyperlane 120", expansion:"te", type:"hyperlane", back:"special", planets:[] },
+  121: { name:"Hyperlane 121", expansion:"te", type:"hyperlane", back:"special", planets:[] },
+  122: { name:"Hyperlane 122", expansion:"te", type:"hyperlane", back:"special", planets:[] },
+  123: { name:"Hyperlane 123", expansion:"te", type:"hyperlane", back:"special", planets:[] },
+  124: { name:"Hyperlane 124", expansion:"te", type:"hyperlane", back:"special", planets:[] },
+
+  // --- The Fracture ---
+  // 3 special tiles, brought into play mid-game, not shuffled into normal pool.
+  // Styx is legendary and has a relic icon; other two have relic icons. Neutral units present.
+  // Using IDs 301-303 since actual tile numbers aren't standard-numbered in the expansion.
+  301: { name:"Styx", expansion:"te", type:"system", back:"fracture",
+         planets:[{name:"Styx", res:0, inf:4, trait:"hazardous", legendary:true, relic:true}],
+         anomalies:[], wormholes:[] }, // "A Song Like Marrow" legendary ability
+  302: { name:"Fracture Tile II", expansion:"te", type:"system", back:"fracture",
+         planets:[{name:"Unknown", res:2, inf:2, trait:"hazardous", relic:true}] }, // planet values unverified
+  303: { name:"Fracture Tile III", expansion:"te", type:"system", back:"fracture",
+         planets:[{name:"Unknown", res:1, inf:3, trait:"hazardous", relic:true}] }, // planet values unverified
 };
 
 /* =============================================================================
@@ -810,7 +871,11 @@ function shuffle(arr) {
 
 function getAvailableTileIds() {
   return Object.entries(SYSTEMS)
-    .filter(([id, s]) => state.expansions[s.expansion] && s.type !== "hyperlane" && s.type !== "mecatol" && s.type !== "special")
+    .filter(([id, s]) => state.expansions[s.expansion]
+      && s.type !== "hyperlane"
+      && s.type !== "mecatol"
+      && s.type !== "special"
+      && s.back !== "fracture") // Fracture tiles enter via breakthrough mid-game, not galaxy setup
     .map(([id]) => Number(id));
 }
 
