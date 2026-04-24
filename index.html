@@ -55,6 +55,11 @@
   /* Settings sheet + mobile overlay behavior */
   #settings-sheet { /* inline in the sidebar on desktop */ }
   .settings-header { display: none; } /* only shown when sheet is an overlay */
+  .settings-footer {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
   .board-tools-left {
     position: absolute;
     top: 14px;
@@ -680,11 +685,9 @@
         </details>
       </div>
     </div>
+    <div class="settings-footer">
+      <button class="btn-secondary" id="clear-locks-btn">Clear Locks &amp; Filters</button>
     </div>
-
-    <div class="ctrl-group">
-      <button class="btn-primary" id="generate-btn">Forge Galaxy</button>
-      <button class="btn-secondary" id="clear-locks-btn" style="margin-top: 6px;">Clear Locks &amp; Filters</button>
     </div>
 
     <div class="ctrl-group" id="sidebar-share-group">
@@ -2434,10 +2437,7 @@ document.getElementById("weighting").onchange = (e) => {
   document.getElementById("w-" + k).onchange = (e) => { state.customWeights[k] = parseFloat(e.target.value) || 0; };
 });
 
-// Generate
-document.getElementById("generate-btn").onclick = () => {
-  generateMap();
-};
+// Clear locks and filters
 document.getElementById("clear-locks-btn").onclick = () => {
   state.locked.clear();
   state.includeTiles.clear();
