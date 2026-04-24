@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxy Forge — TI4 Map Builder</title>
+<style>
+  :root {
+    --bg-deep: #07090e;
+    --bg-panel: #0e141c;
+    --bg-panel-2: #141c28;
+    --border: #2a3547;
+    --border-strong: #3d4e68;
+    --amber: #d4a056;
+    --amber-bright: #f2c77a;
+    --amber-dim: #7a5a2e;
+    --copper: #b8653c;
+    --red: #c8442a;
+    --green: #5a9a4e;
+    --blue-tile: #2a3f66;
+    --red-tile: #4a2418;
+    --green-tile: #1f3a28;
+    --mecatol: #6a2e1a;
+    --cyan: #4db3c7;
+    --text: #e7ecf3;
+    --text-dim: #8a95a6;
+    --text-faint: #4e5a6e;
+    --wh-alpha: #b84dd4;
+    --wh-beta: #4db3c7;
+    --wh-gamma: #ff7a3d;
+    --wh-delta: #d4ba4d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: "Trebuchet MS", "Lucida Sans Unicode", sans-serif;
+    font-size: 14px;
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    background-image:
+      radial-gradient(ellipse at 20% 30%, rgba(212, 160, 86, 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(77, 179, 199, 0.03) 0%, transparent 50%),
+      radial-gradient(1px 1px at 13% 22%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 37% 78%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1px 1px at 62% 15%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 84% 52%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 91% 88%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(2px 2px at 45% 40%, rgba(255,255,255,0.2), transparent),
+      radial-gradient(1px 1px at 8% 62%, rgba(255,255,255,0.3), transparent);
+  }
+  #app { display: grid; grid-template-columns: 340px 1fr; height: 100vh; width: 100vw; }
+  @media (max-width: 820px) {
+    #app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    #sidebar { max-height: 50vh; }
+  }
+  #sidebar {
+    background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 18px 18px 80px 18px;
+  }
+  #board-area { position: relative; overflow: hidden; }
+  #board-viewport { width: 100%; height: 100%; cursor: grab; touch-action: none; display: block; }
+  #board-viewport.dragging { cursor: grabbing; }
+  .brand-title {
+    font-family: "Georgia", serif;
+    font-size: 20px;
+    color: var(--amber-bright);
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+  }
+  .brand-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.4em;
+    margin-top: 2px;
+  }
+  .brand-rule {
+    height: 1px;
+    background: linear-gradient(90deg, var(--amber-dim), transparent);
+    margin: 14px 0 18px 0;
+  }
+  .ctrl-group { margin-bottom: 16px; }
+  .ctrl-label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--amber);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  select, input[type="number"], input[type="text"] {
+    width: 100%;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 9px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 2px;
+  }
+  select:focus, input:focus { outline: none; border-color: var(--amber-dim); }
+  .segmented {
+    display: flex; gap: 2px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 2px;
+  }
+  .segmented button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    padding: 6px;
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 1px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .segmented button.active { background: var(--amber-dim); color: var(--bg-deep); }
+  .segmented button:hover:not(.active) { color: var(--amber-bright); }
+  .toggle-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0; cursor: pointer; user-select: none;
+  }
+  .toggle-track {
+    width: 32px; height: 18px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    position: relative;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .toggle-track::after {
+    content: ""; position: absolute; top: 2px; left: 2px;
+    width: 12px; height: 12px;
+    background: var(--text-faint); border-radius: 50%;
+    transition: all 0.15s;
+  }
+  .toggle-row.on .toggle-track { border-color: var(--amber); background: rgba(212, 160, 86, 0.15); }
+  .toggle-row.on .toggle-track::after { transform: translateX(14px); background: var(--amber-bright); }
+  .toggle-label { font-size: 12px; color: var(--text); flex: 1; }
+  .toggle-sub { font-size: 10px; color: var(--text-faint); display: block; }
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(180deg, var(--amber) 0%, var(--copper) 100%);
+    color: #1a1208; border: none; padding: 11px;
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    cursor: pointer; border-radius: 2px;
+    box-shadow: 0 2px 8px rgba(212, 160, 86, 0.2), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .btn-primary:hover { filter: brightness(1.15); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-secondary {
+    width: 100%;
+    background: var(--bg-deep);
+    color: var(--amber-bright);
+    border: 1px solid var(--border-strong);
+    padding: 8px;
+    font-family: inherit; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    cursor: pointer; border-radius: 2px;
+  }
+  .btn-secondary:hover { border-color: var(--amber); }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .board-tools {
+    position: absolute; top: 14px; right: 14px;
+    display: flex; flex-direction: column; gap: 6px; z-index: 10;
+  }
+  .tool-btn {
+    width: 40px; height: 40px;
+    background: rgba(14, 20, 28, 0.85);
+    border: 1px solid var(--border-strong);
+    color: var(--amber);
+    cursor: pointer; border-radius: 2px;
+    font-size: 16px; backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tool-btn:hover { border-color: var(--amber); color: var(--amber-bright); }
+  .tool-btn.active { background: rgba(212, 160, 86, 0.25); border-color: var(--amber); color: var(--amber-bright); }
+  .board-status {
+    position: absolute; bottom: 14px; left: 14px;
+    background: rgba(14, 20, 28, 0.85);
+    border: 1px solid var(--border);
+    padding: 8px 12px; font-size: 11px;
+    color: var(--text-dim);
+    backdrop-filter: blur(4px);
+    max-width: calc(100% - 28px);
+    z-index: 10;
+  }
+  .confidence-note { color: var(--copper); margin-top: 2px; font-size: 10px; }
+  #tile-menu {
+    position: absolute;
+    background: rgba(14, 20, 28, 0.97);
+    border: 1px solid var(--border-strong);
+    border-radius: 2px; padding: 10px;
+    z-index: 20; min-width: 230px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    display: none;
+  }
+  #tile-menu.show { display: block; }
+  .menu-title {
+    font-size: 13px; color: var(--amber-bright);
+    font-weight: 600; margin-bottom: 2px; letter-spacing: 0.05em;
+  }
+  .menu-meta {
+    font-size: 10px; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;
+  }
+  .planet-line {
+    font-size: 11px; color: var(--text);
+    padding: 3px 0; display: flex; justify-content: space-between;
+  }
+  .planet-stats { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+  .menu-actions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .menu-action {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 4px; font-size: 10px;
+    font-family: inherit; text-transform: uppercase; letter-spacing: 0.08em;
+    cursor: pointer; border-radius: 2px;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .menu-action:hover { border-color: var(--amber-dim); color: var(--amber-bright); }
+  .menu-action.active.locked { background: rgba(77,179,199,0.2); border-color: var(--cyan); color: var(--cyan); }
+  .menu-action.active.include { background: rgba(90,154,78,0.2); border-color: var(--green); color: var(--green); }
+  .menu-action.active.exclude { background: rgba(200,68,42,0.2); border-color: var(--red); color: var(--red); }
+  .menu-action.swap { grid-column: span 2; }
+  #unused-drawer {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    max-height: 45%;
+    background: rgba(14, 20, 28, 0.96);
+    border-top: 1px solid var(--border-strong);
+    transform: translateY(100%);
+    transition: transform 0.2s;
+    z-index: 15; overflow-y: auto;
+    padding: 14px; backdrop-filter: blur(6px);
+  }
+  #unused-drawer.open { transform: translateY(0); }
+  .drawer-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .drawer-title {
+    font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.2em; color: var(--amber);
+  }
+  .drawer-close {
+    background: transparent; border: none;
+    color: var(--text-dim); font-size: 22px; cursor: pointer;
+  }
+  #unused-tiles-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .unused-tile-card {
+    width: 90px;
+    cursor: grab;
+    padding: 8px 4px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--bg-panel-2);
+    font-size: 10px; user-select: none;
+    text-align: center;
+  }
+  .unused-tile-card:active { cursor: grabbing; }
+  .unused-tile-card .uid { color: var(--amber); font-weight: bold; }
+  .unused-tile-card .uname { color: var(--text-dim); margin-top: 2px; line-height: 1.2; min-height: 24px; }
+  .unused-tile-card:hover { border-color: var(--amber-dim); }
+  .unused-tile-card.dragging { opacity: 0.5; }
+  .modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+  }
+  .modal.show { display: flex; }
+  .modal-content {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-strong);
+    padding: 20px; max-width: 500px; width: 100%;
+    border-radius: 2px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-title {
+    font-size: 14px; color: var(--amber-bright);
+    text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 12px;
+  }
+  .hex-wrapper { cursor: pointer; transition: filter 0.1s; }
+  .hex-wrapper:hover { filter: brightness(1.2); }
+  .hex-wrapper.drag-over .hex-bg { stroke: var(--amber-bright); stroke-width: 4 !important; }
+  .hex-wrapper.locked .hex-bg { stroke: var(--cyan); stroke-width: 3 !important; }
+  .hex-wrapper.selected .hex-bg { stroke: var(--amber-bright); stroke-width: 4 !important; filter: drop-shadow(0 0 8px var(--amber)); }
+  .hex-number-overlay {
+    fill: var(--amber-bright); font-size: 11px; font-weight: bold;
+    text-anchor: middle; dominant-baseline: central;
+    paint-order: stroke; stroke: #000; stroke-width: 3px;
+    pointer-events: none;
+  }
+  .hex-name { fill: var(--text); font-size: 7px; text-anchor: middle; pointer-events: none; }
+  .hex-name.home { fill: var(--amber-bright); font-weight: bold; font-size: 8px; }
+  .planet-label { fill: var(--text); font-size: 6px; text-anchor: middle; pointer-events: none; }
+  .planet-stat { font-size: 6.5px; font-weight: bold; text-anchor: middle; pointer-events: none; paint-order: stroke; stroke: #000; stroke-width: 1.5px; }
+  .stat-res { fill: #f2c77a; }
+  .stat-inf { fill: #7ab8e0; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-deep); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+  .hint { font-size: 10px; color: var(--text-faint); line-height: 1.4; margin-top: 4px; font-style: italic; }
+  .custom-weights {
+    display: none; margin-top: 8px; padding: 8px;
+    background: var(--bg-deep); border: 1px solid var(--border); border-radius: 2px;
+  }
+  .custom-weights.show { display: block; }
+  .weight-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px; font-size: 11px;
+  }
+  .weight-row label { color: var(--text-dim); }
+  .weight-row input { width: 60px; padding: 3px 6px; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div class="brand-title">Galaxy Forge</div>
+    <div class="brand-sub">TI4 · PoK · TE · Codex</div>
+    <div class="brand-rule"></div>
+
+```
+<div class="ctrl-group">
+  <label class="ctrl-label">Players</label>
+  <div class="segmented" id="player-count">
+    <button data-val="3">3</button>
+    <button data-val="4">4</button>
+    <button data-val="5">5</button>
+    <button data-val="6" class="active">6</button>
+    <button data-val="7">7</button>
+    <button data-val="8">8</button>
+  </div>
+</div>
+
+<div class="ctrl-group">
+  <label class="ctrl-label">Expansions</label>
+  <div class="toggle-row on" data-toggle="base"><div class="toggle-track"></div><div class="toggle-label">Base Game<span class="toggle-sub">17 factions · 32 systems</span></div></div>
+  <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
+  <div class="toggle-row" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
+  <div class="toggle-row" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
+</div>
+
+<div class="ctrl-group">
+  <label class="ctrl-label">Board Style</label>
+  <select id="board-style">
+    <option value="standard">Standard</option>
+    <option value="large">Large Galaxy</option>
+    <option value="hyperlane">Hyperlane Variant</option>
+  </select>
+</div>
+
+<div class="ctrl-group">
+  <label class="ctrl-label">Placement Style</label>
+  <select id="placement-style">
+    <option value="slice">Slice — full slice</option>
+    <option value="initial">Initial — first tile only</option>
+    <option value="home">Home — home-adjacent</option>
+    <option value="random">Random</option>
+  </select>
+</div>
+
+<div class="ctrl-group">
+  <label class="ctrl-label">System Weighting</label>
+  <select id="weighting">
+    <option value="balanced">Balanced</option>
+    <option value="resource">Resource</option>
+    <option value="influence">Influence</option>
+    <option value="random">Random</option>
+    <option value="custom">Custom…</option>
+  </select>
+  <div class="custom-weights" id="custom-weights">
+    <div class="weight-row"><label>Resources</label><input type="number" step="0.1" id="w-res" value="1.0"></div>
+    <div class="weight-row"><label>Influence</label><input type="number" step="0.1" id="w-inf" value="1.0"></div>
+    <div class="weight-row"><label>Planet Count</label><input type="number" step="0.1" id="w-pc" value="0.5"></div>
+    <div class="weight-row"><label>Tech Specialty</label><input type="number" step="0.1" id="w-tech" value="1.0"></div>
+    <div class="weight-row"><label>Legendary</label><input type="number" step="0.1" id="w-legend" value="2.0"></div>
+    <div class="weight-row"><label>Anomaly Penalty</label><input type="number" step="0.1" id="w-anomaly" value="-1.0"></div>
+  </div>
+</div>
+
+<div class="ctrl-group">
+  <label class="ctrl-label">Placement Options</label>
+  <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
+  <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
+</div>
+
+<div class="ctrl-group">
+  <button class="btn-primary" id="generate-btn">Forge Galaxy</button>
+  <div class="btn-row">
+    <button class="btn-secondary" id="regenerate-btn">Regenerate</button>
+    <button class="btn-secondary" id="clear-locks-btn">Clear Locks</button>
+  </div>
+</div>
+
+<div class="ctrl-group">
+  <label class="ctrl-label">Share</label>
+  <div class="btn-row">
+    <button class="btn-secondary" id="share-btn">Copy Link</button>
+    <button class="btn-secondary" id="export-btn">Export JSON</button>
+  </div>
+</div>
+
+<div class="hint" style="padding: 10px; border: 1px dashed var(--border); border-radius: 2px;">
+  <strong style="color:var(--amber);">Tip:</strong> Click any tile for controls. Drag tiles to swap. Use ⊞ (top-right) to see unused tiles.
+</div>
+```
+
+  </aside>
+
+  <main id="board-area">
+    <div class="board-tools">
+      <button class="tool-btn" id="tool-numbers" title="Toggle tile number overlay">#</button>
+      <button class="tool-btn" id="tool-unused" title="Show unused tiles">⊞</button>
+      <button class="tool-btn" id="tool-zoom-in" title="Zoom in">+</button>
+      <button class="tool-btn" id="tool-zoom-out" title="Zoom out">−</button>
+      <button class="tool-btn" id="tool-reset-view" title="Reset view">⌂</button>
+    </div>
+    <svg id="board-viewport" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="board-status" id="board-status">
+      Galaxy awaiting forge. Press <strong style="color:var(--amber);">Forge Galaxy</strong> to begin.
+      <div class="confidence-note">Base + PoK tile data is verified. Thunder's Edge tiles (Fracture, expedition systems) are included structurally — verify against your TE rulebook before tournament play.</div>
+    </div>
+    <div id="tile-menu"></div>
+    <div id="unused-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title">Unused Tiles — drag onto the board</div>
+        <button class="drawer-close" id="drawer-close">×</button>
+      </div>
+      <div id="unused-tiles-list"></div>
+    </div>
+  </main>
+</div>
+
+<div class="modal" id="share-modal">
+  <div class="modal-content">
+    <div class="modal-title">Share Galaxy</div>
+    <p style="color:var(--text-dim); font-size:12px; margin-bottom: 10px;">Link encodes exact map state. Anyone opening it sees your galaxy.</p>
+    <input type="text" id="share-url" readonly>
+    <div class="btn-row" style="margin-top: 12px;">
+      <button class="btn-secondary" id="share-copy">Copy Link</button>
+      <button class="btn-secondary" id="share-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =============================================================================
+   TILE DATA
+   Format: id => { name, expansion, type, back, planets[], anomalies[], wormholes[], faction? }
+   - type: 'home' | 'system' | 'anomaly' | 'empty' | 'mecatol' | 'hyperlane' | 'special'
+   - back: 'blue' | 'red' | 'green' | 'special'
+   - planets: [{ name, res, inf, trait, tech, legendary }]
+   - anomalies: ['supernova'|'asteroid-field'|'nebula'|'gravity-rift']
+   - wormholes: ['alpha'|'beta'|'gamma'|'delta']
+============================================================================= */
+
+const SYSTEMS = {
+  // --- Mecatol ---
+  18: { name: "Mecatol Rex", expansion: "base", type: "mecatol", back: "special",
+        planets: [{name:"Mecatol Rex", res:1, inf:6, trait:null, tech:null, legendary:false}] },
+
+  // --- Base Game Home Systems (1-17) ---
+  1:  { name:"Jord", expansion:"base", type:"home", back:"green", faction:"Federation of Sol",
+        planets:[{name:"Jord", res:4, inf:2}] },
+  2:  { name:"Moll Primus", expansion:"base", type:"home", back:"green", faction:"Mentak Coalition",
+        planets:[{name:"Moll Primus", res:4, inf:1}] },
+  3:  { name:"Darien", expansion:"base", type:"home", back:"green", faction:"Yin Brotherhood",
+        planets:[{name:"Darien", res:4, inf:4}] },
+  4:  { name:"Muaat", expansion:"base", type:"home", back:"green", faction:"Embers of Muaat",
+        planets:[{name:"Muaat", res:4, inf:1}] },
+  5:  { name:"Nestphar", expansion:"base", type:"home", back:"green", faction:"Arborec",
+        planets:[{name:"Nestphar", res:3, inf:2}] },
+  6:  { name:"[0.0.0]", expansion:"base", type:"home", back:"green", faction:"L1Z1X Mindnet",
+        planets:[{name:"[0.0.0]", res:5, inf:0}] },
+  7:  { name:"Winnu", expansion:"base", type:"home", back:"green", faction:"Winnu",
+        planets:[{name:"Winnu", res:3, inf:4}] },
+  8:  { name:"Mordai II", expansion:"base", type:"home", back:"green", faction:"Yssaril Tribes",
+        planets:[{name:"Mordai II", res:4, inf:0}] },
+  9:  { name:"Maaluuk/Druaa", expansion:"base", type:"home", back:"green", faction:"Naalu Collective",
+        planets:[{name:"Maaluuk", res:0, inf:2},{name:"Druaa", res:3, inf:1}] },
+  10: { name:"Arcturus/Nar", expansion:"base", type:"home", back:"green", faction:"Universities of Jol-Nar",
+        planets:[{name:"Jol", res:1, inf:2, tech:"biotic"},{name:"Nar", res:2, inf:3, tech:"propulsion"}] },
+  11: { name:"Hacan Home", expansion:"base", type:"home", back:"green", faction:"Emirates of Hacan",
+        planets:[{name:"Arretze", res:2, inf:0},{name:"Hercant", res:1, inf:1},{name:"Kamdorn", res:0, inf:1}] },
+  12: { name:"Archon Ref/Archon Tau", expansion:"base", type:"home", back:"green", faction:"Xxcha Kingdom",
+        planets:[{name:"Archon Ren", res:2, inf:3},{name:"Archon Tau", res:1, inf:1}] },
+  13: { name:"Arc Prime/Wren Terra", expansion:"base", type:"home", back:"green", faction:"Barony of Letnev",
+        planets:[{name:"Arc Prime", res:4, inf:0},{name:"Wren Terra", res:2, inf:1}] },
+  14: { name:"Creuss Gate", expansion:"base", type:"home", back:"green", faction:"Ghosts of Creuss",
+        planets:[], wormholes:["delta"] },
+  15: { name:"Quinarra/Tren'lak", expansion:"base", type:"home", back:"green", faction:"Sardakk N'orr",
+        planets:[{name:"Quinarra", res:3, inf:1},{name:"Tren'Lak", res:1, inf:0}] },
+  16: { name:"Lisis II/Ragh", expansion:"base", type:"home", back:"green", faction:"Clan of Saar",
+        planets:[{name:"Lisis II", res:1, inf:0},{name:"Ragh", res:2, inf:1}] },
+  17: { name:"Trenlak/Corneeq", expansion:"base", type:"home", back:"green", faction:"Nekro Virus",
+        planets:[{name:"Mordai II", res:4, inf:0}] },
+        // Note: Nekro home is actually a single tile; this is a placeholder.
+
+  // --- Base Blue Tiles (19-38) ---
+  19: { name:"Wellon", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Wellon", res:1, inf:2, trait:"industrial", tech:"cybernetic"}] },
+  20: { name:"Vefut II", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Vefut II", res:2, inf:2, trait:"hazardous"}] },
+  21: { name:"Thibah", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Thibah", res:1, inf:1, trait:"industrial", tech:"propulsion"}] },
+  22: { name:"Tar'Mann", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Tar'Mann", res:1, inf:1, trait:"industrial", tech:"biotic"}] },
+  23: { name:"Saudor", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Saudor", res:2, inf:2, trait:"industrial"}] },
+  24: { name:"Mehar Xull", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Mehar Xull", res:1, inf:3, trait:"hazardous", tech:"warfare"}] },
+  25: { name:"Quann", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Quann", res:2, inf:1, trait:"cultural"}], wormholes:["beta"] },
+  26: { name:"Lodor", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Lodor", res:3, inf:1, trait:"cultural"}], wormholes:["alpha"] },
+  27: { name:"New Albion/Starpoint", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"New Albion", res:1, inf:1, trait:"industrial", tech:"biotic"},{name:"Starpoint", res:3, inf:1, trait:"hazardous"}] },
+  28: { name:"Tequ'ran/Torkan", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Tequ'ran", res:2, inf:0, trait:"hazardous"},{name:"Torkan", res:0, inf:3, trait:"cultural"}] },
+  29: { name:"Qucen'n/Rarron", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Qucen'n", res:1, inf:2, trait:"industrial"},{name:"Rarron", res:0, inf:3, trait:"cultural"}] },
+  30: { name:"Mellon/Zohbat", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Mellon", res:0, inf:2, trait:"cultural"},{name:"Zohbat", res:3, inf:1, trait:"hazardous"}] },
+  31: { name:"Lazar/Sakulag", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Lazar", res:1, inf:0, trait:"industrial", tech:"cybernetic"},{name:"Sakulag", res:2, inf:1, trait:"hazardous"}] },
+  32: { name:"Dal Bootha/Xxehan", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Dal Bootha", res:0, inf:2, trait:"cultural"},{name:"Xxehan", res:1, inf:1, trait:"cultural"}] },
+  33: { name:"Corneeq/Resculon", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Corneeq", res:1, inf:2, trait:"cultural"},{name:"Resculon", res:2, inf:0, trait:"cultural"}] },
+  34: { name:"Centauri/Gral", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Centauri", res:1, inf:3, trait:"cultural"},{name:"Gral", res:1, inf:1, trait:"industrial", tech:"propulsion"}] },
+  35: { name:"Bereg/Lirta IV", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Bereg", res:3, inf:1, trait:"hazardous"},{name:"Lirta IV", res:2, inf:3, trait:"hazardous"}] },
+  36: { name:"Arnor/Lor", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Arnor", res:2, inf:1, trait:"industrial"},{name:"Lor", res:1, inf:2, trait:"industrial"}] },
+  37: { name:"Arinam/Meer", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Arinam", res:1, inf:2, trait:"industrial"},{name:"Meer", res:0, inf:4, trait:"hazardous", tech:"warfare"}] },
+  38: { name:"Abyz/Fria", expansion:"base", type:"system", back:"blue",
+        planets:[{name:"Abyz", res:3, inf:0, trait:"hazardous"},{name:"Fria", res:2, inf:0, trait:"hazardous"}] },
+
+  // --- Base Red Tiles (39-50) ---
+  39: { name:"Empty System", expansion:"base", type:"empty", back:"red", planets:[] },
+  40: { name:"Empty System", expansion:"base", type:"empty", back:"red", planets:[] },
+  41: { name:"Gravity Rift", expansion:"base", type:"anomaly", back:"red", planets:[], anomalies:["gravity-rift"] },
+  42: { name:"Nebula", expansion:"base", type:"anomaly", back:"red", planets:[], anomalies:["nebula"] },
+  43: { name:"Supernova", expansion:"base", type:"anomaly", back:"red", planets:[], anomalies:["supernova"] },
+  44: { name:"Asteroid Field", expansion:"base", type:"anomaly", back:"red", planets:[], anomalies:["asteroid-field"] },
+  45: { name:"Asteroid Field", expansion:"base", type:"anomaly", back:"red", planets:[], anomalies:["asteroid-field"] },
+  46: { name:"Empty System", expansion:"base", type:"empty", back:"red", planets:[] },
+  47: { name:"Empty System", expansion:"base", type:"empty", back:"red", planets:[] },
+  48: { name:"Empty System", expansion:"base", type:"empty", back:"red", planets:[] },
+  49: { name:"Empty System (β)", expansion:"base", type:"empty", back:"red", planets:[], wormholes:["beta"] },
+  50: { name:"Empty System (α)", expansion:"base", type:"empty", back:"red", planets:[], wormholes:["alpha"] },
+
+  // --- PoK Home Systems (52-58) ---
+  51: { name:"Creuss Gate", expansion:"base", type:"special", back:"green",
+        planets:[], wormholes:["delta"] }, // Creuss gate attach
+  52: { name:"Ixth", expansion:"pok", type:"home", back:"green", faction:"Mahact Gene-Sorcerers",
+        planets:[{name:"Ixth", res:3, inf:5}] },
+  53: { name:"Acheron", expansion:"pok", type:"home", back:"green", faction:"Nomad",
+        planets:[{name:"Acheron", res:4, inf:3}] },
+  54: { name:"Kraag/Siig", expansion:"pok", type:"home", back:"green", faction:"Argent Flight",
+        planets:[{name:"Avar", res:1, inf:1},{name:"Valk", res:2, inf:0},{name:"Ylir", res:0, inf:2}] },
+  55: { name:"Atlas", expansion:"pok", type:"home", back:"green", faction:"Empyrean",
+        planets:[{name:"The Dark", res:3, inf:4}] },
+  56: { name:"Naazir/Rokha", expansion:"pok", type:"home", back:"green", faction:"Naaz-Rokha Alliance",
+        planets:[{name:"Naazir", res:2, inf:1},{name:"Rokha", res:1, inf:2}] },
+  57: { name:"Hope's End", expansion:"pok", type:"home", back:"green", faction:"Vuil'raith Cabal",
+        planets:[{name:"Acheron", res:4, inf:0}] },
+  58: { name:"Tempesta", expansion:"pok", type:"home", back:"green", faction:"Titans of Ul",
+        planets:[{name:"Elysium", res:4, inf:1, legendary:true}] },
+
+  // --- PoK Blue Tiles (59-66) ---
+  59: { name:"Archon Vail", expansion:"pok", type:"system", back:"blue",
+        planets:[{name:"Archon Vail", res:1, inf:3, trait:"hazardous"}] },
+  60: { name:"Perimeter", expansion:"pok", type:"system", back:"blue",
+        planets:[{name:"Perimeter", res:2, inf:1, trait:"industrial"}] },
+  61: { name:"Ang", expansion:"pok", type:"system", back:"blue",
+        planets:[{name:"Ang", res:2, inf:0, trait:"industrial", tech:"warfare"}] },
+  62: { name:"Sem-Lore", expansion:"pok", type:"system", back:"blue",
+        planets:[{name:"Sem-Lore", res:3, inf:2, trait:"cultural", tech:"cybernetic"}] },
+  63: { name:"Vorhal", expansion:"pok", type:"system", back:"blue",
+        planets:[{name:"Vorhal", res:0, inf:2, trait:"cultural", tech:"biotic"}] },
+  64: { name:"Atlas", expansion:"pok", type:"system", back:"blue",
+        planets:[{name:"Atlas", res:3, inf:1, trait:"hazardous"}] },
+  65: { name:"Primor", expansion:"pok", type:"system", back:"blue",
+        planets:[{name:"Primor", res:2, inf:1, trait:"cultural", legendary:true}] },
+  66: { name:"Hope's End", expansion:"pok", type:"system", back:"blue",
+        planets:[{name:"Hope's End", res:3, inf:0, trait:"hazardous", legendary:true}] },
+
+  // --- PoK Red Tiles (67-80) ---
+  67: { name:"Cormund", expansion:"pok", type:"anomaly", back:"red",
+        planets:[{name:"Cormund", res:2, inf:0, trait:"hazardous"}], anomalies:["gravity-rift"] },
+  68: { name:"Everra", expansion:"pok", type:"anomaly", back:"red",
+        planets:[{name:"Everra", res:3, inf:1, trait:"cultural"}], anomalies:["nebula"] },
+  69: { name:"Accoen/Jeol Ir", expansion:"pok", type:"system", back:"red",
+        planets:[{name:"Accoen", res:2, inf:3, trait:"industrial"},{name:"Jeol Ir", res:2, inf:3, trait:"industrial"}] },
+  70: { name:"Kraag/Siig", expansion:"pok", type:"system", back:"red",
+        planets:[{name:"Kraag", res:2, inf:1, trait:"hazardous"},{name:"Siig", res:0, inf:2, trait:"hazardous"}] },
+  71: { name:"Bakal/Alio Prima", expansion:"pok", type:"system", back:"red",
+        planets:[{name:"Bakal", res:1, inf:2, trait:"industrial"},{name:"Alio Prima", res:1, inf:1, trait:"cultural"}] },
+  72: { name:"Lisis/Velnor", expansion:"pok", type:"system", back:"red",
+        planets:[{name:"Lisis", res:2, inf:2, trait:"industrial"},{name:"Velnor", res:2, inf:1, trait:"industrial", tech:"warfare"}] },
+  73: { name:"Cealdri/Xanhact", expansion:"pok", type:"system", back:"red",
+        planets:[{name:"Cealdri", res:0, inf:2, trait:"cultural", tech:"cybernetic"},{name:"Xanhact", res:1, inf:1, trait:"hazardous"}] },
+  74: { name:"Vega Major/Vega Minor", expansion:"pok", type:"system", back:"red",
+        planets:[{name:"Vega Major", res:2, inf:1, trait:"cultural"},{name:"Vega Minor", res:1, inf:2, trait:"cultural", tech:"propulsion"}] },
+  75: { name:"Abaddon/Loki/Ashtroth", expansion:"pok", type:"system", back:"red",
+        planets:[{name:"Abaddon", res:1, inf:0, trait:"cultural"},{name:"Loki", res:1, inf:2, trait:"cultural"},{name:"Ashtroth", res:2, inf:0, trait:"hazardous"}] },
+  76: { name:"Rigel System", expansion:"pok", type:"system", back:"red",
+        planets:[{name:"Rigel I", res:0, inf:1, trait:"hazardous"},{name:"Rigel II", res:1, inf:2, trait:"industrial"},{name:"Rigel III", res:1, inf:1, trait:"cultural"}] },
+  77: { name:"Empty System", expansion:"pok", type:"empty", back:"red", planets:[] },
+  78: { name:"Empty System", expansion:"pok", type:"empty", back:"red", planets:[] },
+  79: { name:"Supernova", expansion:"pok", type:"anomaly", back:"red", planets:[], anomalies:["supernova"] },
+  80: { name:"Asteroid Field", expansion:"pok", type:"anomaly", back:"red", planets:[], anomalies:["asteroid-field"] },
+
+  // --- Wormhole Nexus ---
+  82: { name:"Mallice", expansion:"pok", type:"special", back:"special",
+        planets:[{name:"Mallice", res:0, inf:3, trait:"cultural", legendary:true}],
+        wormholes:["alpha","beta","gamma"] },
+
+  // --- Hyperlanes (83-91) ---
+  83: { name:"Hyperlane", expansion:"pok", type:"hyperlane", back:"special", planets:[] },
+  84: { name:"Hyperlane", expansion:"pok", type:"hyperlane", back:"special", planets:[] },
+  85: { name:"Hyperlane", expansion:"pok", type:"hyperlane", back:"special", planets:[] },
+  86: { name:"Hyperlane", expansion:"pok", type:"hyperlane", back:"special", planets:[] },
+  87: { name:"Hyperlane", expansion:"pok", type:"hyperlane", back:"special", planets:[] },
+  88: { name:"Hyperlane", expansion:"pok", type:"hyperlane", back:"special", planets:[] },
+  89: { name:"Hyperlane", expansion:"pok", type:"hyperlane", back:"special", planets:[] },
+  90: { name:"Hyperlane", expansion:"pok", type:"hyperlane", back:"special", planets:[] },
+  91: { name:"Hyperlane", expansion:"pok", type:"hyperlane", back:"special", planets:[] },
+
+  // --- Codex III Home Systems ---
+  92: { name:"Keleres Home", expansion:"codex", type:"home", back:"green", faction:"Council Keleres",
+        planets:[{name:"Custodia Vigilia", res:2, inf:3, legendary:true}] },
+
+  // --- Thunder's Edge (TE) — STRUCTURAL. Values need verification ---
+  // The Fracture systems (reality tiles)
+  101: { name:"Styx", expansion:"te", type:"system", back:"fracture",
+         planets:[{name:"Styx", res:4, inf:0, trait:"hazardous", legendary:true}] },
+  102: { name:"Thunder's Edge", expansion:"te", type:"special", back:"special",
+         planets:[{name:"Thunder's Edge", res:0, inf:0}] },
+  103: { name:"Fracture System", expansion:"te", type:"system", back:"fracture",
+         planets:[{name:"Unknown", res:2, inf:2, trait:"hazardous"}] },
+  104: { name:"Fracture System", expansion:"te", type:"system", back:"fracture",
+         planets:[{name:"Unknown", res:1, inf:3, trait:"hazardous"}] },
+  // TE faction home systems (6 new) — placeholders with representative values
+  111: { name:"TE Home 1", expansion:"te", type:"home", back:"green", faction:"TE Faction 1",
+         planets:[{name:"TE Home A", res:3, inf:2}] },
+  112: { name:"TE Home 2", expansion:"te", type:"home", back:"green", faction:"TE Faction 2",
+         planets:[{name:"TE Home B", res:4, inf:1}] },
+  113: { name:"TE Home 3", expansion:"te", type:"home", back:"green", faction:"TE Faction 3",
+         planets:[{name:"TE Home C", res:2, inf:3}] },
+  114: { name:"TE Home 4", expansion:"te", type:"home", back:"green", faction:"TE Faction 4",
+         planets:[{name:"TE Home D", res:3, inf:3}] },
+  115: { name:"TE Home 5", expansion:"te", type:"home", back:"green", faction:"TE Faction 5",
+         planets:[{name:"TE Home E", res:4, inf:0}] },
+  116: { name:"TE Home 6", expansion:"te", type:"home", back:"green", faction:"TE Faction 6",
+         planets:[{name:"TE Home F", res:2, inf:4}] },
+};
+
+/* =============================================================================
+   MAP LAYOUTS — axial coordinates (q, r) for each position
+   Each layout specifies: which hexes exist, which are home positions, hyperlane tiles
+============================================================================= */
+
+// Generate a hex ring at radius n (flat-top axial)
+function ring(n) {
+  if (n === 0) return [[0,0]];
+  const results = [];
+  let q = n, r = 0;
+  const dirs = [[-1,1],[-1,0],[0,-1],[1,-1],[1,0],[0,1]];
+  for (const [dq, dr] of dirs) {
+    for (let i = 0; i < n; i++) {
+      results.push([q, r]);
+      q += dq; r += dr;
+    }
+  }
+  return results;
+}
+
+// Standard 6-player: 3 rings, home systems at the 6 corners
+const LAYOUTS = {
+  "3-standard": {
+    coords: [...ring(0), ...ring(1), ...ring(2)],
+    homes: [[2,0],[0,2],[-2,2]],
+    hyperlanes: [],
+    tilesNeeded: { blue: 6, red: 2 },
+  },
+  "4-standard": {
+    coords: [...ring(0), ...ring(1), ...ring(2), ...ring(3)],
+    homes: [[3,0],[0,3],[-3,0],[0,-3]],
+    hyperlanes: [],
+    tilesNeeded: { blue: 5, red: 3 },
+  },
+  "5-standard": {
+    coords: [...ring(0), ...ring(1), ...ring(2), ...ring(3)],
+    homes: [[3,-3],[3,0],[0,3],[-3,2],[-2,-1]],
+    hyperlanes: [],
+    tilesNeeded: { blue: 4, red: 2 },
+  },
+  "6-standard": {
+    coords: [...ring(0), ...ring(1), ...ring(2), ...ring(3)],
+    homes: [[3,-3],[3,0],[0,3],[-3,3],[-3,0],[0,-3]],
+    hyperlanes: [],
+    tilesNeeded: { blue: 3, red: 2 },
+  },
+  "6-large": {
+    coords: [...ring(0), ...ring(1), ...ring(2), ...ring(3), ...ring(4)],
+    homes: [[4,-4],[4,0],[0,4],[-4,4],[-4,0],[0,-4]],
+    hyperlanes: [],
+    tilesNeeded: { blue: 6, red: 3 },
+  },
+  "7-standard": {
+    coords: [...ring(0), ...ring(1), ...ring(2), ...ring(3), ...ring(4)],
+    homes: [[4,-4],[4,-2],[3,1],[0,4],[-3,4],[-4,2],[-4,0]],
+    hyperlanes: [],
+    tilesNeeded: { blue: 4, red: 2 },
+  },
+  "8-standard": {
+    coords: [...ring(0), ...ring(1), ...ring(2), ...ring(3), ...ring(4)],
+    homes: [[4,-4],[4,-2],[3,1],[1,3],[-2,4],[-4,3],[-4,0],[0,-4]],
+    hyperlanes: [],
+    tilesNeeded: { blue: 4, red: 2 },
+  },
+};
+
+/* =============================================================================
+   APP STATE
+============================================================================= */
+
+const state = {
+  playerCount: 6,
+  expansions: { base: true, pok: true, codex: false, te: false },
+  boardStyle: "standard",
+  placementStyle: "slice",
+  weighting: "balanced",
+  customWeights: { res: 1.0, inf: 1.0, pc: 0.5, tech: 1.0, legend: 2.0, anomaly: -1.0 },
+  shufflePriority: false,
+  reversePlacement: false,
+  map: new Map(),           // key "q,r" => tileId
+  locked: new Set(),        // keys of locked positions
+  includeTiles: new Set(),  // tileIds forced to include
+  excludeTiles: new Set(),  // tileIds forced to exclude
+  showNumbers: false,
+  selectedHex: null,        // "q,r" currently selected
+  viewTransform: { x: 0, y: 0, scale: 1 },
+  dragging: null,           // { fromKey, tileId, fromUnused, element }
+};
+
+/* =============================================================================
+   UTILITIES
+============================================================================= */
+
+const HEX_SIZE = 54; // radius
+const HEX_W = Math.sqrt(3) * HEX_SIZE;
+const HEX_H = 2 * HEX_SIZE;
+
+function hexKey(q, r) { return `${q},${r}`; }
+function parseKey(k) { const [q,r] = k.split(",").map(Number); return [q,r]; }
+
+// Axial to pixel (flat-top)
+function axialToPixel(q, r) {
+  const x = HEX_SIZE * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
+  const y = HEX_SIZE * (3/2 * r);
+  return { x, y };
+}
+
+function hexPoints(cx, cy, size) {
+  const pts = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = Math.PI / 180 * (60 * i - 30);
+    pts.push([cx + size * Math.cos(angle), cy + size * Math.sin(angle)]);
+  }
+  return pts.map(p => p.join(",")).join(" ");
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* =============================================================================
+   TILE POOL & WEIGHTING
+============================================================================= */
+
+function getAvailableTileIds() {
+  return Object.entries(SYSTEMS)
+    .filter(([id, s]) => state.expansions[s.expansion] && s.type !== "hyperlane" && s.type !== "mecatol" && s.type !== "special")
+    .map(([id]) => Number(id));
+}
+
+function getHomeSystems() {
+  return Object.entries(SYSTEMS)
+    .filter(([id, s]) => state.expansions[s.expansion] && s.type === "home")
+    .map(([id, s]) => ({ id: Number(id), ...s }));
+}
+
+function tileWeight(tileId) {
+  const s = SYSTEMS[tileId];
+  if (!s) return 0;
+
+  if (state.weighting === "random") return Math.random();
+
+  const w = state.weighting === "custom" ? state.customWeights :
+            state.weighting === "resource" ? { res: 1.0, inf: 0.1, pc: 0.3, tech: 0.5, legend: 1.0, anomaly: -0.5 } :
+            state.weighting === "influence" ? { res: 0.1, inf: 1.0, pc: 0.3, tech: 0.5, legend: 1.0, anomaly: -0.5 } :
+            { res: 1.0, inf: 1.0, pc: 0.5, tech: 1.0, legend: 2.0, anomaly: -1.0 }; // balanced
+
+  let score = 0;
+  const planets = s.planets || [];
+  for (const p of planets) {
+    score += (p.res || 0) * w.res;
+    score += (p.inf || 0) * w.inf;
+    score += w.pc;
+    if (p.tech) score += w.tech;
+    if (p.legendary) score += w.legend;
+  }
+  if ((s.anomalies || []).length > 0) score += w.anomaly;
+  return score;
+}
+
+function isBlue(id) { return SYSTEMS[id] && SYSTEMS[id].back === "blue"; }
+function isRed(id) { return SYSTEMS[id] && SYSTEMS[id].back === "red"; }
+
+/* =============================================================================
+   MAP GENERATION
+============================================================================= */
+
+function generateMap() {
+  const layout = LAYOUTS[`${state.playerCount}-${state.boardStyle}`] || LAYOUTS[`${state.playerCount}-standard`];
+  if (!layout) {
+    alert(`Layout not yet defined for ${state.playerCount} players / ${state.boardStyle}.`);
+    return;
+  }
+
+  // Preserve locked tiles from existing map
+  const lockedMap = new Map();
+  for (const key of state.locked) {
+    if (state.map.has(key)) lockedMap.set(key, state.map.get(key));
+  }
+
+  // New map begins with locked tiles + Mecatol at (0,0)
+  const newMap = new Map();
+  newMap.set("0,0", 18); // Mecatol
+
+  // Add home systems to designated positions
+  const homes = getHomeSystems();
+  const shuffledHomes = shuffle(homes);
+  layout.homes.forEach(([q, r], i) => {
+    const key = hexKey(q, r);
+    if (lockedMap.has(key)) {
+      newMap.set(key, lockedMap.get(key));
+    } else if (shuffledHomes[i]) {
+      newMap.set(key, shuffledHomes[i].id);
+    }
+  });
+
+  // Reapply locked tiles
+  for (const [key, tileId] of lockedMap) {
+    if (!newMap.has(key)) newMap.set(key, tileId);
+  }
+
+  // Get available systems to fill remaining positions
+  const usedIds = new Set(newMap.values());
+  let availableIds = getAvailableTileIds().filter(id => !usedIds.has(id));
+
+  // Remove excluded, ensure included are in pool
+  availableIds = availableIds.filter(id => !state.excludeTiles.has(id));
+  const forceInclude = [...state.includeTiles].filter(id => !usedIds.has(id) && !state.excludeTiles.has(id));
+
+  // Separate into blue/red pools
+  let bluePool = availableIds.filter(isBlue);
+  let redPool = availableIds.filter(isRed);
+  const includeBlue = forceInclude.filter(isBlue);
+  const includeRed = forceInclude.filter(isRed);
+
+  // Determine positions to fill (exclude Mecatol, homes, locked)
+  const positionsToFill = [];
+  for (const [q, r] of layout.coords) {
+    const key = hexKey(q, r);
+    if (!newMap.has(key)) positionsToFill.push(key);
+  }
+
+  // Total tiles needed
+  const totalNeeded = positionsToFill.length;
+  const needed = layout.tilesNeeded || { blue: Math.ceil(totalNeeded * 0.6 / state.playerCount), red: Math.ceil(totalNeeded * 0.4 / state.playerCount) };
+  const totalBlue = needed.blue * state.playerCount + includeBlue.length;
+  const totalRed = needed.red * state.playerCount + includeRed.length;
+
+  // Sort pools by weight (descending)
+  bluePool.sort((a, b) => tileWeight(b) - tileWeight(a));
+  redPool.sort((a, b) => tileWeight(b) - tileWeight(a));
+
+  // Take the tiles needed from each pool (top-weighted + includes)
+  let selectedBlue = [...includeBlue, ...bluePool.slice(0, Math.max(0, totalBlue - includeBlue.length))];
+  let selectedRed = [...includeRed, ...redPool.slice(0, Math.max(0, totalRed - includeRed.length))];
+
+  // Total pool to place
+  let tilesToPlace = [...selectedBlue, ...selectedRed];
+  // Pad if short
+  while (tilesToPlace.length < totalNeeded) {
+    const remaining = [...bluePool, ...redPool].filter(id => !tilesToPlace.includes(id));
+    if (remaining.length === 0) break;
+    tilesToPlace.push(remaining[0]);
+  }
+  tilesToPlace = tilesToPlace.slice(0, totalNeeded);
+
+  // Placement order determined by placement style
+  const positions = computePlacementOrder(positionsToFill, layout);
+
+  // Sort tilesToPlace by weight for priority-based placement
+  tilesToPlace.sort((a, b) => tileWeight(b) - tileWeight(a));
+  if (state.reversePlacement) tilesToPlace.reverse();
+  if (state.weighting === "random") tilesToPlace = shuffle(tilesToPlace);
+
+  // Place tiles avoiding anomaly adjacency and matching wormhole adjacency where possible
+  placeWithConstraints(newMap, positions, tilesToPlace, layout);
+
+  state.map = newMap;
+  render();
+  updateStatus();
+}
+
+function computePlacementOrder(positions, layout) {
+  // Slice: prioritize tiles near home systems and on path to Mecatol
+  // Initial: prioritize only the tile directly in front of home
+  // Home: prioritize tiles adjacent to homes
+  // Random: no priority
+
+  const homeKeys = layout.homes.map(([q,r]) => hexKey(q,r));
+  const rankedPositions = positions.map(key => {
+    const [q, r] = parseKey(key);
+    const distFromMecatol = (Math.abs(q) + Math.abs(r) + Math.abs(q + r)) / 2;
+    const distFromNearestHome = Math.min(...homeKeys.map(hk => {
+      const [hq, hr] = parseKey(hk);
+      return (Math.abs(q - hq) + Math.abs(r - hr) + Math.abs((q - hq) + (r - hr))) / 2;
+    }));
+
+    let priority = 0;
+    if (state.placementStyle === "slice") {
+      priority = 100 - distFromNearestHome * 10 - distFromMecatol;
+    } else if (state.placementStyle === "initial") {
+      priority = distFromNearestHome === 1 && distFromMecatol < 3 ? 100 : Math.random() * 10;
+    } else if (state.placementStyle === "home") {
+      priority = distFromNearestHome === 1 ? 100 : Math.random() * 10;
+    } else {
+      priority = Math.random() * 100;
+    }
+
+    return { key, priority };
+  });
+
+  rankedPositions.sort((a, b) => b.priority - a.priority);
+
+  if (state.shufflePriority) {
+    return shuffle(rankedPositions).map(p => p.key);
+  }
+
+  return rankedPositions.map(p => p.key);
+}
+
+function getNeighbors(q, r) {
+  const dirs = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+  return dirs.map(([dq,dr]) => [q+dq, r+dr]);
+}
+
+function placeWithConstraints(map, positions, tiles, layout) {
+  // Greedy: try to place each tile; swap if constraint violated
+  const placed = [...tiles];
+  const coordsSet = new Set(layout.coords.map(([q,r]) => hexKey(q,r)));
+
+  for (let i = 0; i < positions.length && i < placed.length; i++) {
+    const posKey = positions[i];
+    const tileId = placed[i];
+    const [q, r] = parseKey(posKey);
+
+    const sys = SYSTEMS[tileId];
+    if (!sys) { map.set(posKey, tileId); continue; }
+
+    // Check anomaly & wormhole constraints
+    const hasAnomaly = (sys.anomalies || []).length > 0;
+    const wormholes = sys.wormholes || [];
+    let violation = false;
+
+    for (const [nq, nr] of getNeighbors(q, r)) {
+      const nKey = hexKey(nq, nr);
+      if (!coordsSet.has(nKey)) continue;
+      const neighborId = map.get(nKey);
+      if (!neighborId) continue;
+      const nSys = SYSTEMS[neighborId];
+      if (!nSys) continue;
+      const nHasAnomaly = (nSys.anomalies || []).length > 0;
+      const nWormholes = nSys.wormholes || [];
+
+      if (hasAnomaly && nHasAnomaly) violation = true;
+      if (wormholes.some(w => nWormholes.includes(w))) violation = true;
+    }
+
+    if (violation) {
+      // try swap with a later tile that wouldn't violate
+      for (let j = i + 1; j < placed.length; j++) {
+        const altId = placed[j];
+        const altSys = SYSTEMS[altId];
+        if (!altSys) continue;
+        const altAnomaly = (altSys.anomalies || []).length > 0;
+        const altWormholes = altSys.wormholes || [];
+        let altOk = true;
+        for (const [nq, nr] of getNeighbors(q, r)) {
+          const nKey = hexKey(nq, nr);
+          if (!coordsSet.has(nKey)) continue;
+          const neighborId = map.get(nKey);
+          if (!neighborId) continue;
+          const nSys = SYSTEMS[neighborId];
+          if (!nSys) continue;
+          const nHasAnomaly = (nSys.anomalies || []).length > 0;
+          const nWormholes = nSys.wormholes || [];
+          if (altAnomaly && nHasAnomaly) altOk = false;
+          if (altWormholes.some(w => nWormholes.includes(w))) altOk = false;
+        }
+        if (altOk) {
+          [placed[i], placed[j]] = [placed[j], placed[i]];
+          break;
+        }
+      }
+    }
+    map.set(posKey, placed[i]);
+  }
+}
+
+/* =============================================================================
+   RENDERING
+============================================================================= */
+
+const svg = document.getElementById("board-viewport");
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function svgEl(tag, attrs = {}) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    el.setAttribute(k, v);
+  }
+  return el;
+}
+
+function render() {
+  svg.innerHTML = "";
+
+  // Compute bounding box
+  const layout = LAYOUTS[`${state.playerCount}-${state.boardStyle}`] || LAYOUTS[`${state.playerCount}-standard`];
+  if (!layout) return;
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const [q, r] of layout.coords) {
+    const { x, y } = axialToPixel(q, r);
+    minX = Math.min(minX, x - HEX_SIZE);
+    maxX = Math.max(maxX, x + HEX_SIZE);
+    minY = Math.min(minY, y - HEX_SIZE);
+    maxY = Math.max(maxY, y + HEX_SIZE);
+  }
+
+  const padding = 40;
+  const viewW = maxX - minX + padding * 2;
+  const viewH = maxY - minY + padding * 2;
+  svg.setAttribute("viewBox", `${minX - padding} ${minY - padding} ${viewW} ${viewH}`);
+
+  // Render each hex
+  const g = svgEl("g", { id: "board-g", transform: `scale(${state.viewTransform.scale}) translate(${state.viewTransform.x} ${state.viewTransform.y})` });
+  svg.appendChild(g);
+
+  for (const [q, r] of layout.coords) {
+    const key = hexKey(q, r);
+    const tileId = state.map.get(key);
+    renderHex(g, q, r, key, tileId);
+  }
+}
+
+function renderHex(parent, q, r, key, tileId) {
+  const { x, y } = axialToPixel(q, r);
+  const sys = tileId ? SYSTEMS[tileId] : null;
+
+  const group = svgEl("g", { class: "hex-wrapper", "data-key": key, transform: `translate(${x} ${y})` });
+  if (state.locked.has(key)) group.classList.add("locked");
+  if (state.selectedHex === key) group.classList.add("selected");
+
+  // Background
+  const fill = getHexFill(sys, tileId);
+  const stroke = getHexStroke(sys);
+  const bg = svgEl("polygon", {
+    points: hexPoints(0, 0, HEX_SIZE - 1),
+    fill,
+    stroke,
+    "stroke-width": 2,
+    class: "hex-bg",
+  });
+  group.appendChild(bg);
+
+  // Inner details based on tile type
+  if (sys) {
+    renderTileContent(group, sys, tileId);
+  } else {
+    // Empty position marker
+    const txt = svgEl("text", { x: 0, y: 0, class: "hex-name", fill: "var(--text-faint)" });
+    txt.textContent = "·";
+    group.appendChild(txt);
+  }
+
+  // Number overlay
+  if (state.showNumbers && tileId) {
+    const numBg = svgEl("circle", { cx: 0, cy: -HEX_SIZE * 0.55, r: 12, fill: "rgba(0,0,0,0.75)", stroke: "var(--amber)", "stroke-width": 1 });
+    group.appendChild(numBg);
+    const numText = svgEl("text", { x: 0, y: -HEX_SIZE * 0.55, class: "hex-number-overlay" });
+    numText.textContent = tileId;
+    group.appendChild(numText);
+  }
+
+  // Click handler
+  group.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (tileId) showTileMenu(key, tileId, x, y);
+  });
+
+  // Drag handlers (native)
+  group.addEventListener("pointerdown", (e) => startHexDrag(e, key, tileId));
+
+  parent.appendChild(group);
+}
+
+function getHexFill(sys, tileId) {
+  if (!sys) return "#0a1019";
+  if (sys.type === "mecatol") return "var(--mecatol)";
+  if (sys.type === "home") return "var(--green-tile)";
+  if (sys.type === "anomaly") {
+    const a = sys.anomalies[0];
+    if (a === "supernova") return "#5a1a10";
+    if (a === "nebula") return "#3a1a4a";
+    if (a === "asteroid-field") return "#2a1a10";
+    if (a === "gravity-rift") return "#1a0a2a";
+  }
+  if (sys.type === "empty") return "#1a1e28";
+  if (sys.back === "fracture") return "#2a0814";
+  if (sys.back === "blue") return "var(--blue-tile)";
+  if (sys.back === "red") return "var(--red-tile)";
+  if (sys.back === "special") return "#2a2030";
+  return "#1a1e28";
+}
+
+function getHexStroke(sys) {
+  if (!sys) return "var(--border)";
+  if (sys.type === "mecatol") return "var(--amber-bright)";
+  if (sys.type === "home") return "var(--green)";
+  if ((sys.wormholes || []).length > 0) return "var(--wh-alpha)";
+  return "var(--border-strong)";
+}
+
+function renderTileContent(group, sys, tileId) {
+  // Special rendering for Mecatol
+  if (sys.type === "mecatol") {
+    const bigText = svgEl("text", { x: 0, y: -2, class: "hex-name home" });
+    bigText.textContent = "MECATOL";
+    bigText.setAttribute("font-size", "9");
+    group.appendChild(bigText);
+    const sub = svgEl("text", { x: 0, y: 7, class: "hex-name home" });
+    sub.textContent = "REX";
+    sub.setAttribute("font-size", "9");
+    group.appendChild(sub);
+    // 1R / 6I
+    const stats = svgEl("text", { x: 0, y: 18, class: "planet-stat stat-res" });
+    stats.textContent = "1R · 6I";
+    group.appendChild(stats);
+    return;
+  }
+
+  // Home systems
+  if (sys.type === "home") {
+    const nm = svgEl("text", { x: 0, y: -HEX_SIZE * 0.4, class: "hex-name home" });
+    nm.textContent = (sys.faction || "HOME").toUpperCase().slice(0, 14);
+    group.appendChild(nm);
+    renderPlanets(group, sys.planets || []);
+    return;
+  }
+
+  // Anomalies
+  if (sys.type === "anomaly") {
+    const a = (sys.anomalies || [])[0] || "";
+    const icon = { supernova: "☀", nebula: "☁", "asteroid-field": "✦", "gravity-rift": "◎" }[a] || "⚠";
+    const iconText = svgEl("text", { x: 0, y: -6, "text-anchor": "middle", "font-size": "20", fill: "var(--amber-bright)", "pointer-events": "none" });
+    iconText.textContent = icon;
+    group.appendChild(iconText);
+    const nm = svgEl("text", { x: 0, y: 14, class: "hex-name" });
+    nm.textContent = a.toUpperCase().replace("-", " ");
+    nm.setAttribute("font-size", "6");
+    group.appendChild(nm);
+    // If anomaly has a planet (like Cormund)
+    if ((sys.planets || []).length > 0) {
+      renderPlanets(group, sys.planets, 20);
+    }
+    return;
+  }
+
+  // Empty systems
+  if (sys.type === "empty") {
+    const wh = (sys.wormholes || [])[0];
+    if (wh) {
+      const whCol = { alpha: "var(--wh-alpha)", beta: "var(--wh-beta)", gamma: "var(--wh-gamma)", delta: "var(--wh-delta)" }[wh];
+      const circ = svgEl("circle", { cx: 0, cy: 0, r: 14, fill: "none", stroke: whCol, "stroke-width": 3 });
+      group.appendChild(circ);
+      const whText = svgEl("text", { x: 0, y: 2, "text-anchor": "middle", "font-size": "14", fill: whCol, "font-weight": "bold" });
+      whText.textContent = wh[0].toUpperCase();
+      group.appendChild(whText);
+    } else {
+      const dot = svgEl("circle", { cx: 0, cy: 0, r: 2, fill: "var(--text-faint)" });
+      group.appendChild(dot);
+    }
+    return;
+  }
+
+  // Regular system — render planets
+  renderPlanets(group, sys.planets || []);
+
+  // Wormhole indicator
+  const wh = (sys.wormholes || [])[0];
+  if (wh) {
+    const whCol = { alpha: "var(--wh-alpha)", beta: "var(--wh-beta)", gamma: "var(--wh-gamma)", delta: "var(--wh-delta)" }[wh];
+    const wCirc = svgEl("circle", { cx: HEX_SIZE * 0.55, cy: -HEX_SIZE * 0.55, r: 9, fill: "rgba(0,0,0,0.7)", stroke: whCol, "stroke-width": 2 });
+    group.appendChild(wCirc);
+    const wTxt = svgEl("text", { x: HEX_SIZE * 0.55, y: -HEX_SIZE * 0.55 + 3, "text-anchor": "middle", "font-size": "9", fill: whCol, "font-weight": "bold" });
+    wTxt.textContent = wh[0].toUpperCase();
+    group.appendChild(wTxt);
+  }
+}
+
+function renderPlanets(group, planets, yOffset = 0) {
+  const n = planets.length;
+  if (n === 0) return;
+  const positions = n === 1 ? [[0, 0]] :
+                    n === 2 ? [[-14, -5], [14, 8]] :
+                    n === 3 ? [[-16, -8], [16, -8], [0, 12]] :
+                    [[-16, -12], [16, -12], [-16, 12], [16, 12]];
+
+  planets.forEach((p, i) => {
+    const [px, py] = positions[i] || [0, 0];
+    // Planet name
+    const nm = svgEl("text", { x: px, y: py - 8 + yOffset, class: "planet-label" });
+    nm.textContent = (p.name || "").slice(0, 10);
+    group.appendChild(nm);
+    // Stats
+    const stats = svgEl("text", { x: px, y: py + 2 + yOffset, class: "planet-stat" });
+    stats.setAttribute("fill", "var(--amber-bright)");
+    stats.textContent = `${p.res || 0}/${p.inf || 0}`;
+    group.appendChild(stats);
+    // Tech indicator
+    if (p.tech) {
+      const techCol = { biotic: "#5a9a4e", cybernetic: "#4db3c7", propulsion: "#b84dd4", warfare: "#c8442a" }[p.tech] || "#d4a056";
+      const tCirc = svgEl("circle", { cx: px, cy: py + 10 + yOffset, r: 2.5, fill: techCol });
+      group.appendChild(tCirc);
+    }
+    if (p.legendary) {
+      const lStar = svgEl("text", { x: px + 10, y: py + 2 + yOffset, "font-size": "8", fill: "var(--amber-bright)", "pointer-events": "none" });
+      lStar.textContent = "★";
+      group.appendChild(lStar);
+    }
+  });
+}
+
+function updateStatus() {
+  const status = document.getElementById("board-status");
+  const tileCount = state.map.size;
+  const lockedCount = state.locked.size;
+  const included = state.includeTiles.size;
+  const excluded = state.excludeTiles.size;
+  status.innerHTML = `<strong style="color:var(--amber-bright);">${state.playerCount}p · ${state.boardStyle}</strong> · ${tileCount} tiles placed` +
+    (lockedCount ? ` · <span style="color:var(--cyan);">${lockedCount} locked</span>` : "") +
+    (included ? ` · <span style="color:var(--green);">${included} included</span>` : "") +
+    (excluded ? ` · <span style="color:var(--red);">${excluded} excluded</span>` : "") +
+    `<div class="confidence-note">TE tile data is structural — verify against your rulebook.</div>`;
+}
+
+/* =============================================================================
+   TILE MENU
+============================================================================= */
+
+function showTileMenu(key, tileId, cx, cy) {
+  state.selectedHex = key;
+  const sys = SYSTEMS[tileId];
+  if (!sys) return;
+  const menu = document.getElementById("tile-menu");
+
+  const isLocked = state.locked.has(key);
+  const isIncluded = state.includeTiles.has(tileId);
+  const isExcluded = state.excludeTiles.has(tileId);
+
+  let planetsHtml = "";
+  if ((sys.planets || []).length > 0) {
+    planetsHtml = sys.planets.map(p => {
+      const techIcon = p.tech ? ` <span style="color: var(--cyan);">⚛</span>` : "";
+      const legendIcon = p.legendary ? ` <span style="color: var(--amber-bright);">★</span>` : "";
+      return `<div class="planet-line"><span class="planet-name">${p.name}${techIcon}${legendIcon}</span><span class="planet-stats">${p.res}R / ${p.inf}I</span></div>`;
+    }).join("");
+  }
+  let anomaliesHtml = "";
+  if ((sys.anomalies || []).length > 0) {
+    anomaliesHtml = `<div class="planet-line"><span style="color:var(--red);">Anomaly:</span> <span style="color:var(--text-dim);">${sys.anomalies.join(", ")}</span></div>`;
+  }
+  let whHtml = "";
+  if ((sys.wormholes || []).length > 0) {
+    whHtml = `<div class="planet-line"><span style="color:var(--wh-alpha);">Wormhole:</span> <span style="color:var(--text-dim);">${sys.wormholes.map(w => w).join(", ")}</span></div>`;
+  }
+
+  menu.innerHTML = `
+    <div class="menu-title">${sys.name}</div>
+    <div class="menu-meta">Tile ${tileId} · ${sys.expansion.toUpperCase()} · ${sys.type}${sys.faction ? ' · ' + sys.faction : ''}</div>
+    ${planetsHtml}${anomaliesHtml}${whHtml}
+    <div class="menu-actions">
+      <button class="menu-action locked ${isLocked ? 'active' : ''}" data-act="lock">
+        🔒 ${isLocked ? 'Locked' : 'Lock'}
+      </button>
+      <button class="menu-action include ${isIncluded ? 'active' : ''}" data-act="include">
+        ✓ ${isIncluded ? 'Always' : 'Always Include'}
+      </button>
+      <button class="menu-action exclude ${isExcluded ? 'active' : ''}" data-act="exclude">
+        ✕ ${isExcluded ? 'Never' : 'Never Include'}
+      </button>
+      <button class="menu-action swap" data-act="swap">
+        ⇄ Swap with unused tile
+      </button>
+    </div>
+  `;
+
+  menu.classList.add("show");
+
+  // Position menu near the hex
+  const rect = svg.getBoundingClientRect();
+  const svgPt = svg.createSVGPoint();
+  svgPt.x = cx; svgPt.y = cy;
+  const ctm = svg.getScreenCTM();
+  const screenPt = ctm ? svgPt.matrixTransform(ctm) : { x: rect.width/2, y: rect.height/2 };
+
+  const boardRect = document.getElementById("board-area").getBoundingClientRect();
+  const menuW = 250, menuH = 300;
+  let px = screenPt.x - boardRect.left + 30;
+  let py = screenPt.y - boardRect.top - menuH/2;
+  if (px + menuW > boardRect.width) px = screenPt.x - boardRect.left - menuW - 30;
+  if (py < 10) py = 10;
+  if (py + menuH > boardRect.height) py = boardRect.height - menuH - 10;
+
+  menu.style.left = px + "px";
+  menu.style.top = py + "px";
+
+  menu.querySelectorAll("[data-act]").forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const act = btn.dataset.act;
+      if (act === "lock") toggleLock(key);
+      else if (act === "include") toggleInclude(tileId);
+      else if (act === "exclude") toggleExclude(tileId);
+      else if (act === "swap") swapWithUnused(key, tileId);
+      showTileMenu(key, state.map.get(key), cx, cy); // refresh
+    };
+  });
+
+  render(); // reflect selected hex
+}
+
+function hideTileMenu() {
+  document.getElementById("tile-menu").classList.remove("show");
+  state.selectedHex = null;
+  render();
+}
+
+function toggleLock(key) {
+  if (state.locked.has(key)) state.locked.delete(key);
+  else state.locked.add(key);
+}
+
+function toggleInclude(tileId) {
+  if (state.includeTiles.has(tileId)) state.includeTiles.delete(tileId);
+  else { state.includeTiles.add(tileId); state.excludeTiles.delete(tileId); }
+}
+
+function toggleExclude(tileId) {
+  if (state.excludeTiles.has(tileId)) state.excludeTiles.delete(tileId);
+  else { state.excludeTiles.add(tileId); state.includeTiles.delete(tileId); }
+}
+
+function swapWithUnused(key, currentTileId) {
+  const unusedIds = getUnusedTileIds();
+  if (unusedIds.length === 0) { alert("No unused tiles available."); return; }
+  // Swap with a random unused of same back color (blue/red/special)
+  const curSys = SYSTEMS[currentTileId];
+  const sameBack = unusedIds.filter(id => SYSTEMS[id].back === curSys.back);
+  const pool = sameBack.length > 0 ? sameBack : unusedIds;
+  const newId = pool[Math.floor(Math.random() * pool.length)];
+  state.map.set(key, newId);
+  updateStatus();
+}
+
+/* =============================================================================
+   UNUSED TILES DRAWER
+============================================================================= */
+
+function getUnusedTileIds() {
+  const used = new Set(state.map.values());
+  return Object.keys(SYSTEMS)
+    .map(Number)
+    .filter(id => !used.has(id))
+    .filter(id => {
+      const s = SYSTEMS[id];
+      return s.type !== "hyperlane" && s.type !== "special";
+    });
+}
+
+function renderUnusedTiles() {
+  const list = document.getElementById("unused-tiles-list");
+  list.innerHTML = "";
+  const ids = getUnusedTileIds();
+  ids.sort((a, b) => a - b);
+  for (const id of ids) {
+    const sys = SYSTEMS[id];
+    if (!state.expansions[sys.expansion]) continue;
+    const card = document.createElement("div");
+    card.className = "unused-tile-card";
+    card.dataset.tileId = id;
+    card.draggable = true;
+    card.innerHTML = `<div class="uid">${id}</div><div class="uname">${sys.name}</div>`;
+    card.addEventListener("dragstart", (e) => {
+      state.dragging = { tileId: id, fromUnused: true };
+      card.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    card.addEventListener("dragend", () => {
+      card.classList.remove("dragging");
+      state.dragging = null;
+    });
+    list.appendChild(card);
+  }
+}
+
+/* =============================================================================
+   DRAG AND DROP (Pointer-based)
+============================================================================= */
+
+let pointerDragData = null;
+
+function startHexDrag(e, key, tileId) {
+  if (!tileId) return;
+  if (e.pointerType === "mouse" && e.button !== 0) return;
+  pointerDragData = { key, tileId, startX: e.clientX, startY: e.clientY, moved: false };
+}
+
+document.addEventListener("pointermove", (e) => {
+  if (!pointerDragData) return;
+  const dx = e.clientX - pointerDragData.startX;
+  const dy = e.clientY - pointerDragData.startY;
+  if (!pointerDragData.moved && Math.hypot(dx, dy) > 10) {
+    pointerDragData.moved = true;
+    hideTileMenu();
+  }
+  if (pointerDragData.moved) {
+    // Highlight hex under cursor
+    document.querySelectorAll(".hex-wrapper.drag-over").forEach(el => el.classList.remove("drag-over"));
+    const elUnder = document.elementFromPoint(e.clientX, e.clientY);
+    const hexGroup = elUnder ? elUnder.closest(".hex-wrapper") : null;
+    if (hexGroup && hexGroup.dataset.key !== pointerDragData.key) {
+      hexGroup.classList.add("drag-over");
+    }
+  }
+});
+
+document.addEventListener("pointerup", (e) => {
+  if (!pointerDragData) return;
+  if (pointerDragData.moved) {
+    const elUnder = document.elementFromPoint(e.clientX, e.clientY);
+    const hexGroup = elUnder ? elUnder.closest(".hex-wrapper") : null;
+    if (hexGroup && hexGroup.dataset.key !== pointerDragData.key) {
+      const targetKey = hexGroup.dataset.key;
+      const srcTile = state.map.get(pointerDragData.key);
+      const tgtTile = state.map.get(targetKey);
+      // Don't swap with Mecatol unless source is Mecatol (which never happens)
+      state.map.set(targetKey, srcTile);
+      if (tgtTile) state.map.set(pointerDragData.key, tgtTile);
+      else state.map.delete(pointerDragData.key);
+      render();
+      updateStatus();
+    }
+  }
+  document.querySelectorAll(".hex-wrapper.drag-over").forEach(el => el.classList.remove("drag-over"));
+  pointerDragData = null;
+});
+
+// HTML5 drag from unused drawer onto board
+svg.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  document.querySelectorAll(".hex-wrapper.drag-over").forEach(el => el.classList.remove("drag-over"));
+  const elUnder = document.elementFromPoint(e.clientX, e.clientY);
+  const hexGroup = elUnder ? elUnder.closest(".hex-wrapper") : null;
+  if (hexGroup) hexGroup.classList.add("drag-over");
+});
+svg.addEventListener("drop", (e) => {
+  e.preventDefault();
+  document.querySelectorAll(".hex-wrapper.drag-over").forEach(el => el.classList.remove("drag-over"));
+  if (!state.dragging || !state.dragging.fromUnused) return;
+  const elUnder = document.elementFromPoint(e.clientX, e.clientY);
+  const hexGroup = elUnder ? elUnder.closest(".hex-wrapper") : null;
+  if (!hexGroup) return;
+  const targetKey = hexGroup.dataset.key;
+  // Replace tile at target with unused
+  state.map.set(targetKey, state.dragging.tileId);
+  state.dragging = null;
+  render();
+  renderUnusedTiles();
+  updateStatus();
+});
+
+/* =============================================================================
+   VIEW CONTROLS (pan/zoom)
+============================================================================= */
+
+let panStart = null;
+svg.addEventListener("pointerdown", (e) => {
+  // Only pan if clicking the SVG background (not a hex)
+  if (e.target.closest(".hex-wrapper")) return;
+  panStart = { x: e.clientX, y: e.clientY, tx: state.viewTransform.x, ty: state.viewTransform.y };
+  svg.classList.add("dragging");
+  hideTileMenu();
+});
+document.addEventListener("pointermove", (e) => {
+  if (!panStart) return;
+  const dx = (e.clientX - panStart.x) / state.viewTransform.scale;
+  const dy = (e.clientY - panStart.y) / state.viewTransform.scale;
+  state.viewTransform.x = panStart.tx + dx;
+  state.viewTransform.y = panStart.ty + dy;
+  const g = document.getElementById("board-g");
+  if (g) g.setAttribute("transform", `scale(${state.viewTransform.scale}) translate(${state.viewTransform.x} ${state.viewTransform.y})`);
+});
+document.addEventListener("pointerup", () => {
+  panStart = null;
+  svg.classList.remove("dragging");
+});
+
+svg.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  state.viewTransform.scale = Math.max(0.3, Math.min(3, state.viewTransform.scale * factor));
+  const g = document.getElementById("board-g");
+  if (g) g.setAttribute("transform", `scale(${state.viewTransform.scale}) translate(${state.viewTransform.x} ${state.viewTransform.y})`);
+}, { passive: false });
+
+/* =============================================================================
+   SHARE / EXPORT
+============================================================================= */
+
+function getShareState() {
+  return {
+    pc: state.playerCount,
+    ex: state.expansions,
+    bs: state.boardStyle,
+    ps: state.placementStyle,
+    w: state.weighting,
+    cw: state.customWeights,
+    sp: state.shufflePriority,
+    rp: state.reversePlacement,
+    m: [...state.map.entries()],
+    lk: [...state.locked],
+    inc: [...state.includeTiles],
+    exc: [...state.excludeTiles],
+  };
+}
+
+function loadShareState(obj) {
+  if (!obj) return;
+  state.playerCount = obj.pc || 6;
+  state.expansions = obj.ex || state.expansions;
+  state.boardStyle = obj.bs || "standard";
+  state.placementStyle = obj.ps || "slice";
+  state.weighting = obj.w || "balanced";
+  state.customWeights = obj.cw || state.customWeights;
+  state.shufflePriority = !!obj.sp;
+  state.reversePlacement = !!obj.rp;
+  state.map = new Map(obj.m || []);
+  state.locked = new Set(obj.lk || []);
+  state.includeTiles = new Set(obj.inc || []);
+  state.excludeTiles = new Set(obj.exc || []);
+  syncUIFromState();
+  render();
+  updateStatus();
+}
+
+function encodeForURL(obj) {
+  const json = JSON.stringify(obj);
+  return btoa(encodeURIComponent(json));
+}
+
+function decodeFromURL(s) {
+  try {
+    return JSON.parse(decodeURIComponent(atob(s)));
+  } catch (e) { return null; }
+}
+
+function openShareModal() {
+  const shareObj = getShareState();
+  const encoded = encodeForURL(shareObj);
+  const url = location.origin + location.pathname + "?g=" + encoded;
+  document.getElementById("share-url").value = url;
+  document.getElementById("share-modal").classList.add("show");
+}
+
+/* =============================================================================
+   UI SYNC
+============================================================================= */
+
+function syncUIFromState() {
+  // Player count
+  document.querySelectorAll("#player-count button").forEach(b => {
+    b.classList.toggle("active", Number(b.dataset.val) === state.playerCount);
+  });
+  // Expansions
+  document.querySelectorAll("[data-toggle]").forEach(el => {
+    const key = el.dataset.toggle;
+    if (key in state.expansions) {
+      el.classList.toggle("on", state.expansions[key]);
+    } else if (key === "shuffle-priority") {
+      el.classList.toggle("on", state.shufflePriority);
+    } else if (key === "reverse-placement") {
+      el.classList.toggle("on", state.reversePlacement);
+    }
+  });
+  // Selects
+  document.getElementById("board-style").value = state.boardStyle;
+  document.getElementById("placement-style").value = state.placementStyle;
+  document.getElementById("weighting").value = state.weighting;
+  document.getElementById("custom-weights").classList.toggle("show", state.weighting === "custom");
+  // Custom weights
+  document.getElementById("w-res").value = state.customWeights.res;
+  document.getElementById("w-inf").value = state.customWeights.inf;
+  document.getElementById("w-pc").value = state.customWeights.pc;
+  document.getElementById("w-tech").value = state.customWeights.tech;
+  document.getElementById("w-legend").value = state.customWeights.legend;
+  document.getElementById("w-anomaly").value = state.customWeights.anomaly;
+}
+
+/* =============================================================================
+   EVENT WIRING
+============================================================================= */
+
+// Player count
+document.querySelectorAll("#player-count button").forEach(b => {
+  b.onclick = () => {
+    state.playerCount = Number(b.dataset.val);
+    syncUIFromState();
+  };
+});
+
+// Toggles
+document.querySelectorAll("[data-toggle]").forEach(el => {
+  el.addEventListener("click", () => {
+    const key = el.dataset.toggle;
+    if (key in state.expansions) {
+      state.expansions[key] = !state.expansions[key];
+    } else if (key === "shuffle-priority") {
+      state.shufflePriority = !state.shufflePriority;
+    } else if (key === "reverse-placement") {
+      state.reversePlacement = !state.reversePlacement;
+    }
+    syncUIFromState();
+  });
+});
+
+document.getElementById("board-style").onchange = (e) => { state.boardStyle = e.target.value; };
+document.getElementById("placement-style").onchange = (e) => { state.placementStyle = e.target.value; };
+document.getElementById("weighting").onchange = (e) => {
+  state.weighting = e.target.value;
+  document.getElementById("custom-weights").classList.toggle("show", state.weighting === "custom");
+};
+
+["res","inf","pc","tech","legend","anomaly"].forEach(k => {
+  document.getElementById("w-" + k).onchange = (e) => { state.customWeights[k] = parseFloat(e.target.value) || 0; };
+});
+
+// Generate
+document.getElementById("generate-btn").onclick = () => {
+  state.locked.clear();
+  generateMap();
+};
+document.getElementById("regenerate-btn").onclick = () => generateMap();
+document.getElementById("clear-locks-btn").onclick = () => {
+  state.locked.clear();
+  state.includeTiles.clear();
+  state.excludeTiles.clear();
+  render();
+  updateStatus();
+};
+
+// Tools
+document.getElementById("tool-numbers").onclick = (e) => {
+  state.showNumbers = !state.showNumbers;
+  e.currentTarget.classList.toggle("active", state.showNumbers);
+  render();
+};
+document.getElementById("tool-unused").onclick = (e) => {
+  const drawer = document.getElementById("unused-drawer");
+  drawer.classList.toggle("open");
+  e.currentTarget.classList.toggle("active", drawer.classList.contains("open"));
+  if (drawer.classList.contains("open")) renderUnusedTiles();
+};
+document.getElementById("drawer-close").onclick = () => {
+  document.getElementById("unused-drawer").classList.remove("open");
+  document.getElementById("tool-unused").classList.remove("active");
+};
+document.getElementById("tool-zoom-in").onclick = () => {
+  state.viewTransform.scale = Math.min(3, state.viewTransform.scale * 1.15);
+  const g = document.getElementById("board-g");
+  if (g) g.setAttribute("transform", `scale(${state.viewTransform.scale}) translate(${state.viewTransform.x} ${state.viewTransform.y})`);
+};
+document.getElementById("tool-zoom-out").onclick = () => {
+  state.viewTransform.scale = Math.max(0.3, state.viewTransform.scale * 0.87);
+  const g = document.getElementById("board-g");
+  if (g) g.setAttribute("transform", `scale(${state.viewTransform.scale}) translate(${state.viewTransform.x} ${state.viewTransform.y})`);
+};
+document.getElementById("tool-reset-view").onclick = () => {
+  state.viewTransform = { x: 0, y: 0, scale: 1 };
+  render();
+};
+
+// Share
+document.getElementById("share-btn").onclick = openShareModal;
+document.getElementById("share-close").onclick = () => document.getElementById("share-modal").classList.remove("show");
+document.getElementById("share-copy").onclick = () => {
+  const input = document.getElementById("share-url");
+  input.select();
+  try {
+    navigator.clipboard.writeText(input.value);
+    document.getElementById("share-copy").textContent = "Copied!";
+    setTimeout(() => document.getElementById("share-copy").textContent = "Copy Link", 1500);
+  } catch (e) {
+    document.execCommand("copy");
+  }
+};
+document.getElementById("export-btn").onclick = () => {
+  const data = JSON.stringify(getShareState(), null, 2);
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `galaxy-${state.playerCount}p-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// Click outside menu to close
+document.addEventListener("click", (e) => {
+  const menu = document.getElementById("tile-menu");
+  if (!menu.contains(e.target) && !e.target.closest(".hex-wrapper")) {
+    hideTileMenu();
+  }
+});
+
+// Prevent context menu on long-press (mobile)
+svg.addEventListener("contextmenu", e => e.preventDefault());
+
+/* =============================================================================
+   INITIALIZATION
+============================================================================= */
+
+function init() {
+  syncUIFromState();
+  // Try loading from URL
+  const params = new URLSearchParams(location.search);
+  const g = params.get("g");
+  if (g) {
+    const decoded = decodeFromURL(g);
+    if (decoded) {
+      loadShareState(decoded);
+      return;
+    }
+  }
+  // Empty map with just Mecatol preview
+  state.map.set("0,0", 18);
+  render();
+}
+
+init();
+</script>
+
+</body>
+</html>
