@@ -124,6 +124,14 @@
     margin: 14px 0 18px 0;
   }
   .ctrl-group { margin-bottom: 16px; }
+  .ctrl-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 10px;
+    margin-bottom: 16px;
+  }
+  .ctrl-grid > .ctrl-group { margin-bottom: 0; }
+  .ctrl-grid > .full-width { grid-column: 1 / -1; }
   .ctrl-label {
     display: block;
     font-size: 10px;
@@ -468,67 +476,72 @@
     <div class="brand-sub">TI4 · PoK · TE · Codex</div>
     <div class="brand-rule"></div>
 
-    <div class="ctrl-group">
-      <label class="ctrl-label">Players</label>
-      <select id="player-count">
-        <option value="3">3 Players</option>
-        <option value="4">4 Players</option>
-        <option value="5">5 Players</option>
-        <option value="6" selected>6 Players</option>
-        <option value="7">7 Players</option>
-        <option value="8">8 Players</option>
-      </select>
-    </div>
-
-    <div class="ctrl-group">
-      <label class="ctrl-label">Expansions</label>
-      <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
-      <div class="toggle-row on" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
-      <div class="toggle-row on" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
-    </div>
-
-    <div class="ctrl-group">
-      <label class="ctrl-label">Board Style<button class="info-icon" data-info="board-style" aria-label="About board style">ⓘ</button></label>
-      <select id="board-style">
-        <option value="standard">Standard</option>
-        <option value="large">Large Galaxy</option>
-        <option value="hyperlane">Hyperlane Variant</option>
-      </select>
-    </div>
-
-    <div class="ctrl-group">
-      <label class="ctrl-label">Placement Style<button class="info-icon" data-info="placement-style" aria-label="About placement style">ⓘ</button></label>
-      <select id="placement-style">
-        <option value="slice">Slice — full slice</option>
-        <option value="initial">Initial — first tile only</option>
-        <option value="home">Home — home-adjacent</option>
-        <option value="random">Random</option>
-      </select>
-    </div>
-
-    <div class="ctrl-group">
-      <label class="ctrl-label">System Weighting<button class="info-icon" data-info="weighting" aria-label="About system weighting">ⓘ</button></label>
-      <select id="weighting">
-        <option value="balanced">Balanced</option>
-        <option value="resource">Resource</option>
-        <option value="influence">Influence</option>
-        <option value="random">Random</option>
-        <option value="custom">Custom…</option>
-      </select>
-      <div class="custom-weights" id="custom-weights">
-        <div class="weight-row"><label>Resources</label><input type="number" step="0.1" id="w-res" value="1.0"></div>
-        <div class="weight-row"><label>Influence</label><input type="number" step="0.1" id="w-inf" value="1.0"></div>
-        <div class="weight-row"><label>Planet Count</label><input type="number" step="0.1" id="w-pc" value="0.5"></div>
-        <div class="weight-row"><label>Tech Specialty</label><input type="number" step="0.1" id="w-tech" value="1.0"></div>
-        <div class="weight-row"><label>Legendary</label><input type="number" step="0.1" id="w-legend" value="2.0"></div>
-        <div class="weight-row"><label>Anomaly Penalty</label><input type="number" step="0.1" id="w-anomaly" value="-1.0"></div>
+    <div class="ctrl-grid">
+      <div class="ctrl-group">
+        <label class="ctrl-label">Players</label>
+        <select id="player-count">
+          <option value="3">3 Players</option>
+          <option value="4">4 Players</option>
+          <option value="5">5 Players</option>
+          <option value="6" selected>6 Players</option>
+          <option value="7">7 Players</option>
+          <option value="8">8 Players</option>
+        </select>
       </div>
-    </div>
 
-    <div class="ctrl-group">
-      <label class="ctrl-label">Placement Options<button class="info-icon" data-info="placement-options" aria-label="About placement options">ⓘ</button></label>
-      <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
-      <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
+      <div class="ctrl-group">
+        <label class="ctrl-label">Board Style<button class="info-icon" data-info="board-style" aria-label="About board style">ⓘ</button></label>
+        <select id="board-style">
+          <option value="standard">Standard</option>
+          <option value="large">Large Galaxy</option>
+          <option value="hyperlane">Hyperlane Variant</option>
+        </select>
+      </div>
+
+      <div class="ctrl-group">
+        <label class="ctrl-label">Placement Style<button class="info-icon" data-info="placement-style" aria-label="About placement style">ⓘ</button></label>
+        <select id="placement-style">
+          <option value="slice">Slice — full slice</option>
+          <option value="initial">Initial — first tile only</option>
+          <option value="home">Home — home-adjacent</option>
+          <option value="random">Random</option>
+        </select>
+      </div>
+
+      <div class="ctrl-group">
+        <label class="ctrl-label">System Weighting<button class="info-icon" data-info="weighting" aria-label="About system weighting">ⓘ</button></label>
+        <select id="weighting">
+          <option value="balanced">Balanced</option>
+          <option value="resource">Resource</option>
+          <option value="influence">Influence</option>
+          <option value="random">Random</option>
+          <option value="custom">Custom…</option>
+        </select>
+      </div>
+
+      <div class="ctrl-group full-width" id="custom-weights-group" style="display:none;">
+        <div class="custom-weights show">
+          <div class="weight-row"><label>Resources</label><input type="number" step="0.1" id="w-res" value="1.0"></div>
+          <div class="weight-row"><label>Influence</label><input type="number" step="0.1" id="w-inf" value="1.0"></div>
+          <div class="weight-row"><label>Planet Count</label><input type="number" step="0.1" id="w-pc" value="0.5"></div>
+          <div class="weight-row"><label>Tech Specialty</label><input type="number" step="0.1" id="w-tech" value="1.0"></div>
+          <div class="weight-row"><label>Legendary</label><input type="number" step="0.1" id="w-legend" value="2.0"></div>
+          <div class="weight-row"><label>Anomaly Penalty</label><input type="number" step="0.1" id="w-anomaly" value="-1.0"></div>
+        </div>
+      </div>
+
+      <div class="ctrl-group full-width">
+        <label class="ctrl-label">Expansions</label>
+        <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
+        <div class="toggle-row on" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
+        <div class="toggle-row on" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
+      </div>
+
+      <div class="ctrl-group full-width">
+        <label class="ctrl-label">Placement Options<button class="info-icon" data-info="placement-options" aria-label="About placement options">ⓘ</button></label>
+        <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
+        <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
+      </div>
     </div>
 
     <div class="ctrl-group">
@@ -2220,7 +2233,7 @@ function syncUIFromState() {
   document.getElementById("board-style").value = state.boardStyle;
   document.getElementById("placement-style").value = state.placementStyle;
   document.getElementById("weighting").value = state.weighting;
-  document.getElementById("custom-weights").classList.toggle("show", state.weighting === "custom");
+  document.getElementById("custom-weights-group").style.display = state.weighting === "custom" ? "block" : "none";
   // Custom weights
   document.getElementById("w-res").value = state.customWeights.res;
   document.getElementById("w-inf").value = state.customWeights.inf;
@@ -2258,7 +2271,7 @@ document.getElementById("board-style").onchange = (e) => { state.boardStyle = e.
 document.getElementById("placement-style").onchange = (e) => { state.placementStyle = e.target.value; };
 document.getElementById("weighting").onchange = (e) => {
   state.weighting = e.target.value;
-  document.getElementById("custom-weights").classList.toggle("show", state.weighting === "custom");
+  document.getElementById("custom-weights-group").style.display = state.weighting === "custom" ? "block" : "none";
 };
 
 ["res","inf","pc","tech","legend","anomaly"].forEach(k => {
