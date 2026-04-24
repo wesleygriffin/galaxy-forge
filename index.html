@@ -521,8 +521,6 @@
     <div class="board-tools">
       <button class="tool-btn" id="tool-numbers" title="Toggle tile number overlay">#</button>
       <button class="tool-btn" id="tool-unused" title="Show unused tiles">⊞</button>
-      <button class="tool-btn" id="tool-zoom-in" title="Zoom in">+</button>
-      <button class="tool-btn" id="tool-zoom-out" title="Zoom out">−</button>
       <button class="tool-btn" id="tool-reset-view" title="Reset view">⌂</button>
     </div>
     <svg id="board-viewport" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -2143,14 +2141,6 @@ document.getElementById("tool-unused").onclick = (e) => {
 document.getElementById("drawer-close").onclick = () => {
   document.getElementById("unused-drawer").classList.remove("open");
   document.getElementById("tool-unused").classList.remove("active");
-};
-document.getElementById("tool-zoom-in").onclick = () => {
-  state.viewTransform.scale = Math.min(3, state.viewTransform.scale * 1.15);
-  applyViewTransform();
-};
-document.getElementById("tool-zoom-out").onclick = () => {
-  state.viewTransform.scale = Math.max(0.3, state.viewTransform.scale * 0.87);
-  applyViewTransform();
 };
 document.getElementById("tool-reset-view").onclick = () => {
   state.viewTransform = { x: 0, y: 0, scale: 1 };
