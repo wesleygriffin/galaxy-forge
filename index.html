@@ -133,6 +133,55 @@
     margin-bottom: 6px;
     font-weight: 600;
   }
+  .info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px; height: 16px;
+    margin-left: 6px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--amber-dim);
+    color: var(--amber);
+    border-radius: 50%;
+    font-size: 10px;
+    font-family: inherit;
+    cursor: pointer;
+    vertical-align: middle;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+  .info-icon:hover { background: var(--amber-dim); color: var(--bg-deep); }
+  .info-popup {
+    position: fixed;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border-strong);
+    padding: 14px;
+    font-size: 12px;
+    color: var(--text);
+    max-width: 320px;
+    z-index: 50;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.7);
+    border-radius: 3px;
+    line-height: 1.5;
+    letter-spacing: normal;
+    text-transform: none;
+    font-weight: normal;
+  }
+  .info-popup h4 {
+    color: var(--amber-bright);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .info-popup p { margin-bottom: 8px; }
+  .info-popup p:last-child { margin-bottom: 0; }
+  .info-popup ul { padding-left: 14px; margin: 6px 0; }
+  .info-popup li { margin-bottom: 5px; }
+  .info-popup li:last-child { margin-bottom: 0; }
+  .info-popup strong { color: var(--amber-bright); }
   select, input[type="number"], input[type="text"] {
     width: 100%;
     background: var(--bg-deep);
@@ -404,7 +453,7 @@
     </div>
 
     <div class="ctrl-group">
-      <label class="ctrl-label">Board Style</label>
+      <label class="ctrl-label">Board Style<button class="info-icon" data-info="board-style" aria-label="About board style">ⓘ</button></label>
       <select id="board-style">
         <option value="standard">Standard</option>
         <option value="large">Large Galaxy</option>
@@ -413,7 +462,7 @@
     </div>
 
     <div class="ctrl-group">
-      <label class="ctrl-label">Placement Style</label>
+      <label class="ctrl-label">Placement Style<button class="info-icon" data-info="placement-style" aria-label="About placement style">ⓘ</button></label>
       <select id="placement-style">
         <option value="slice">Slice — full slice</option>
         <option value="initial">Initial — first tile only</option>
@@ -423,7 +472,7 @@
     </div>
 
     <div class="ctrl-group">
-      <label class="ctrl-label">System Weighting</label>
+      <label class="ctrl-label">System Weighting<button class="info-icon" data-info="weighting" aria-label="About system weighting">ⓘ</button></label>
       <select id="weighting">
         <option value="balanced">Balanced</option>
         <option value="resource">Resource</option>
@@ -442,7 +491,7 @@
     </div>
 
     <div class="ctrl-group">
-      <label class="ctrl-label">Placement Options</label>
+      <label class="ctrl-label">Placement Options<button class="info-icon" data-info="placement-options" aria-label="About placement options">ⓘ</button></label>
       <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
       <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
     </div>
@@ -2112,6 +2161,95 @@ document.getElementById("tool-reset-view").onclick = () => {
 document.getElementById("sidebar-collapse-btn").onclick = () => {
   document.getElementById("sidebar").classList.toggle("collapsed");
 };
+
+// ---- Help popups for control headers ----
+const HELP_TEXT = {
+  "board-style": `<h4>Board Style</h4>
+    <p>Changes how the tiles are actually laid out on a newly generated map.</p>
+    <p>Changing this would cause you to expect different hex layouts, such as different patterns of tiles, usage of hyperlanes, or unorthodox placement of home worlds.</p>`,
+
+  "placement-style": `<h4>Placement Style</h4>
+    <p>Dictates where important tiles are placed. Most revolve around having at least one tile near the home system with good resources.</p>
+    <ul>
+      <li><strong>Slice</strong> — places tiles like a normal player would. Prioritizes a good pathway to Mecatol, and filling in the area around the home system with good tiles.</li>
+      <li><strong>Initial</strong> — only guarantees a good tile right in front of the home system (on the way to Mecatol). Everything else is random.</li>
+      <li><strong>Home</strong> — prioritizes all of the adjacent tiles to the home system; everything else is random.</li>
+      <li><strong>Random</strong> — shuffles the priority levels completely. No favoritism to tiles near the home system.</li>
+    </ul>`,
+
+  "weighting": `<h4>System Weighting</h4>
+    <p>Determines how tiles are weighted for placement. A higher-weighted tile is more important, and so (depending on the placement style) it's put closer to home worlds to facilitate available assets.</p>
+    <ul>
+      <li><strong>Balanced</strong> — a custom weight that favors resources and planet count more than anomalies. More accurately factors in tech specialties and influence as trade-offs to the "Resource" pick.</li>
+      <li><strong>Resource</strong> — tiles ordered primarily by their resource values. Higher-resource planets are more coveted.</li>
+      <li><strong>Influence</strong> — similar to Resource, tiles are ordered primarily by their influence values.</li>
+      <li><strong>Random</strong> — tiles are completely randomly ordered. Expect chaotic and unbalanced maps.</li>
+      <li><strong>Custom</strong> — enter your own values for balancing trade-offs between various tile qualities.</li>
+    </ul>`,
+
+  "placement-options": `<h4>Placement Options</h4>
+    <p><strong>Shuffle Priority</strong> — Randomizes the priority picks for each picking round.</p>
+    <p>Normally when placing tiles, this tool attempts to place tiles so player 1 does not always get the best ones. It follows game setup rules — in a 6-player game, player 1 places tile 1 and 12, while player 6 places tile 6 and 7. Turning this on stops that and completely randomizes the placement order.</p>
+    <p><strong>Reverse Placement Order</strong> — Reverses which tiles are placed first.</p>
+    <p>Tiles are normally placed in priority order. Reversing means the last picks go first, which generally pushes the more valuable tiles toward the center of the galaxy.</p>`,
+};
+
+let currentInfoPopup = null;
+function closeInfoPopup() {
+  if (currentInfoPopup) {
+    currentInfoPopup.remove();
+    currentInfoPopup = null;
+  }
+}
+function showInfoPopup(key, anchor) {
+  // Toggle: if clicking the same anchor again, just close
+  if (currentInfoPopup && currentInfoPopup.dataset.forKey === key) {
+    closeInfoPopup();
+    return;
+  }
+  closeInfoPopup();
+  const popup = document.createElement("div");
+  popup.className = "info-popup";
+  popup.dataset.forKey = key;
+  popup.innerHTML = HELP_TEXT[key] || "";
+  document.body.appendChild(popup);
+  currentInfoPopup = popup;
+
+  // Position: try below the anchor, flipping above if it would overflow.
+  // Clamp horizontally to viewport with a margin.
+  const rect = anchor.getBoundingClientRect();
+  const pRect = popup.getBoundingClientRect();
+  const margin = 10;
+  let left = rect.left - 8;
+  let top = rect.bottom + 6;
+  if (left + pRect.width > window.innerWidth - margin) {
+    left = window.innerWidth - pRect.width - margin;
+  }
+  if (left < margin) left = margin;
+  if (top + pRect.height > window.innerHeight - margin) {
+    // Flip above the anchor
+    top = rect.top - pRect.height - 6;
+    if (top < margin) top = margin; // last-resort clamp
+  }
+  popup.style.left = left + "px";
+  popup.style.top = top + "px";
+}
+
+// Wire up info icons. Use delegation so icons added dynamically (e.g. after
+// sidebar collapse/expand) still work.
+document.addEventListener("click", (e) => {
+  const icon = e.target.closest(".info-icon");
+  if (icon) {
+    e.stopPropagation();
+    e.preventDefault();
+    showInfoPopup(icon.dataset.info, icon);
+    return;
+  }
+  // Click outside an open popup closes it
+  if (currentInfoPopup && !e.target.closest(".info-popup")) {
+    closeInfoPopup();
+  }
+});
 
 // Share
 document.getElementById("share-btn").onclick = openShareModal;
