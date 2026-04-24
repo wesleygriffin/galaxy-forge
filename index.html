@@ -85,7 +85,23 @@
     transition: max-height 0.2s;
   }
   #board-area { position: relative; overflow: hidden; }
-  #board-viewport { width: 100%; height: 100%; cursor: grab; touch-action: none; display: block; }
+  #board-viewport {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: none;
+    display: block;
+    /* Prevent iOS long-press from selecting SVG text or showing the callout menu */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #board-viewport * {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
   #board-viewport.dragging { cursor: grabbing; }
   .brand-title {
     font-family: "Georgia", serif;
