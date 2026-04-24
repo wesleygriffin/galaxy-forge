@@ -327,6 +327,8 @@
   .hex-wrapper.drag-over .hex-bg { stroke: var(--amber-bright); stroke-width: 4 !important; }
   .hex-wrapper.locked .hex-bg { stroke: var(--cyan); stroke-width: 3 !important; }
   .hex-wrapper.selected .hex-bg { stroke: var(--amber-bright); stroke-width: 4 !important; filter: drop-shadow(0 0 8px var(--amber)); }
+  .hex-wrapper.lifted { filter: drop-shadow(0 0 14px var(--amber-bright)) brightness(1.25); }
+  .hex-wrapper.lifted .hex-bg { stroke: var(--amber-bright); stroke-width: 4 !important; }
   .hex-number-overlay {
     fill: var(--amber-bright); font-size: 11px; font-weight: bold;
     text-anchor: middle; dominant-baseline: central;
@@ -1588,18 +1590,59 @@ function renderUnusedTiles() {
 ============================================================================= */
 
 let pointerDragData = null;
+let longPressTimer = null;
+let longPressCandidate = null; // { key, tileId, startX, startY, pointerId }
+const LONG_PRESS_MS = 400;
+const LONG_PRESS_MOVE_CANCEL_PX = 10;
 
 function startHexDrag(e, key, tileId) {
   if (!tileId) return;
   if (e.pointerType === "mouse" && e.button !== 0) return;
-  // On touch, skip hex drag entirely and let the svg pan/pinch handler take over.
-  // Tapping (no drag) will still fire the click event and open the tile menu.
-  // For touch-based tile swaps, use the menu's "Swap with unused tile" or drag from the drawer.
-  if (e.pointerType === "touch") return;
-  pointerDragData = { key, tileId, startX: e.clientX, startY: e.clientY, moved: false };
+
+  if (e.pointerType === "touch") {
+    // On touch, we don't start a drag immediately — instead we arm a long-press
+    // timer. If the finger holds still for ~400ms, we "lift" the tile and enable
+    // drag-to-swap. If the finger moves before then, pan takes over (the timer
+    // is cancelled from the move handler).
+    clearLongPress();
+    longPressCandidate = { key, tileId, startX: e.clientX, startY: e.clientY, pointerId: e.pointerId };
+    longPressTimer = setTimeout(() => {
+      // Promote to lift mode: this tile is now held and can be dragged onto another.
+      const cand = longPressCandidate;
+      if (!cand) return;
+      pointerDragData = { key: cand.key, tileId: cand.tileId, startX: cand.startX, startY: cand.startY, moved: true, mode: "lift" };
+      // Cancel any in-progress pan so the map stops following the finger
+      panStart = null;
+      svg.classList.remove("dragging");
+      hideTileMenu();
+      // Visual cue + haptic nudge
+      const hexEl = svg.querySelector(`.hex-wrapper[data-key="${cand.key}"]`);
+      if (hexEl) hexEl.classList.add("lifted");
+      if (navigator.vibrate) navigator.vibrate(15);
+      longPressCandidate = null;
+      longPressTimer = null;
+    }, LONG_PRESS_MS);
+    return;
+  }
+
+  // Mouse / pen: immediate drag mode (unchanged behavior)
+  pointerDragData = { key, tileId, startX: e.clientX, startY: e.clientY, moved: false, mode: "mouse" };
+}
+
+function clearLongPress() {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+  longPressCandidate = null;
 }
 
 document.addEventListener("pointermove", (e) => {
+  // If a long-press is pending and the finger moved too much, cancel it so pan
+  // can take over. This is what gives drag-gestures priority over long-press.
+  if (longPressCandidate && e.pointerId === longPressCandidate.pointerId) {
+    const dx = e.clientX - longPressCandidate.startX;
+    const dy = e.clientY - longPressCandidate.startY;
+    if (Math.hypot(dx, dy) > LONG_PRESS_MOVE_CANCEL_PX) clearLongPress();
+  }
+
   if (!pointerDragData) return;
   const dx = e.clientX - pointerDragData.startX;
   const dy = e.clientY - pointerDragData.startY;
@@ -1619,6 +1662,9 @@ document.addEventListener("pointermove", (e) => {
 });
 
 document.addEventListener("pointerup", (e) => {
+  // Any pointerup cancels a pending long-press (tap was released before timer)
+  if (longPressCandidate && e.pointerId === longPressCandidate.pointerId) clearLongPress();
+
   if (!pointerDragData) return;
   if (pointerDragData.moved) {
     const elUnder = document.elementFromPoint(e.clientX, e.clientY);
@@ -1627,7 +1673,6 @@ document.addEventListener("pointerup", (e) => {
       const targetKey = hexGroup.dataset.key;
       const srcTile = state.map.get(pointerDragData.key);
       const tgtTile = state.map.get(targetKey);
-      // Don't swap with Mecatol unless source is Mecatol (which never happens)
       state.map.set(targetKey, srcTile);
       if (tgtTile) state.map.set(pointerDragData.key, tgtTile);
       else state.map.delete(pointerDragData.key);
@@ -1635,7 +1680,16 @@ document.addEventListener("pointerup", (e) => {
       updateStatus();
     }
   }
+  // Clean up visuals
   document.querySelectorAll(".hex-wrapper.drag-over").forEach(el => el.classList.remove("drag-over"));
+  document.querySelectorAll(".hex-wrapper.lifted").forEach(el => el.classList.remove("lifted"));
+  pointerDragData = null;
+});
+
+document.addEventListener("pointercancel", (e) => {
+  if (longPressCandidate && e.pointerId === longPressCandidate.pointerId) clearLongPress();
+  document.querySelectorAll(".hex-wrapper.drag-over").forEach(el => el.classList.remove("drag-over"));
+  document.querySelectorAll(".hex-wrapper.lifted").forEach(el => el.classList.remove("lifted"));
   pointerDragData = null;
 });
 
@@ -1696,8 +1750,14 @@ svg.addEventListener("pointerdown", (e) => {
     panStart = { x: e.clientX, y: e.clientY, tx: state.viewTransform.x, ty: state.viewTransform.y, moved: false };
     svg.classList.add("dragging");
   } else if (activePointers.size === 2) {
-    // Second finger down — switch to pinch mode, cancel pan
+    // Second finger down — switch to pinch mode, cancel pan and any lift
     panStart = null;
+    clearLongPress();
+    if (pointerDragData && pointerDragData.mode === "lift") {
+      document.querySelectorAll(".hex-wrapper.lifted").forEach(el => el.classList.remove("lifted"));
+      document.querySelectorAll(".hex-wrapper.drag-over").forEach(el => el.classList.remove("drag-over"));
+      pointerDragData = null;
+    }
     const pts = [...activePointers.values()];
     const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
     const midX = (pts[0].x + pts[1].x) / 2;
