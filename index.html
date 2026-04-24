@@ -276,6 +276,20 @@
   }
   .tool-btn:hover { border-color: var(--amber); color: var(--amber-bright); }
   .tool-btn.active { background: rgba(212, 160, 86, 0.25); border-color: var(--amber); color: var(--amber-bright); }
+  .tool-btn-primary {
+    background: linear-gradient(180deg, var(--amber) 0%, var(--copper) 100%);
+    border-color: var(--amber);
+    color: #1a1208;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(212, 160, 86, 0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .tool-btn-primary:hover { filter: brightness(1.15); color: #1a1208; }
+  .tool-btn-primary.spinning { animation: spin 0.4s ease-out; }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
   .board-status {
     position: absolute; bottom: 14px; left: 14px;
     background: rgba(14, 20, 28, 0.85);
@@ -537,6 +551,7 @@
 
   <main id="board-area">
     <div class="board-tools">
+      <button class="tool-btn tool-btn-primary" id="tool-forge" title="Forge new galaxy (keeps locks)">↻</button>
       <button class="tool-btn" id="tool-numbers" title="Toggle tile number overlay">#</button>
       <button class="tool-btn" id="tool-unused" title="Show unused tiles">⊞</button>
       <button class="tool-btn" id="tool-reset-view" title="Reset view">⌂</button>
@@ -2269,6 +2284,14 @@ document.getElementById("clear-locks-btn").onclick = () => {
 };
 
 // Tools
+document.getElementById("tool-forge").onclick = (e) => {
+  const btn = e.currentTarget;
+  btn.classList.remove("spinning");
+  // Force reflow so the animation restarts if clicked rapidly
+  void btn.offsetWidth;
+  btn.classList.add("spinning");
+  generateMap();
+};
 document.getElementById("tool-numbers").onclick = (e) => {
   state.showNumbers = !state.showNumbers;
   e.currentTarget.classList.toggle("active", state.showNumbers);
