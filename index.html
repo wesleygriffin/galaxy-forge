@@ -1847,6 +1847,8 @@ function resetAllPointerState() {
   panStart = null;
   pinchStart = null;
   clearLongPress();
+  cancelMomentum();
+  panSamples = [];
   pointerDragData = null;
   svg.classList.remove("dragging");
   document.querySelectorAll(".hex-wrapper.drag-over, .hex-wrapper.lifted").forEach(el => {
@@ -1881,6 +1883,9 @@ svg.addEventListener("pointerdown", (e) => {
   // should pan the map, so we don't bail out here.
   if (e.pointerType !== "touch" && e.target.closest(".hex-wrapper")) return;
 
+  // Any new gesture cancels any in-flight momentum from a previous fling.
+  cancelMomentum();
+
   // Prune any stale tracked pointers before adding this one. This handles the case
   // where iOS dropped a pointerup/pointercancel and left a ghost in activePointers.
   pruneStalePointers();
@@ -1896,6 +1901,7 @@ svg.addEventListener("pointerdown", (e) => {
   if (activePointers.size === 1) {
     // Start pan
     panStart = { x: e.clientX, y: e.clientY, tx: state.viewTransform.x, ty: state.viewTransform.y, moved: false };
+    panSamples = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
     svg.classList.add("dragging");
   } else if (activePointers.size === 2) {
     // Second finger down — switch to pinch mode, cancel pan and any lift
@@ -1955,19 +1961,83 @@ document.addEventListener("pointermove", (e) => {
     state.viewTransform.x = panStart.tx + dx;
     state.viewTransform.y = panStart.ty + dy;
     applyViewTransform();
+    // Sample velocity for momentum on release. Keep a short sliding window so
+    // we compute velocity over the most recent motion, not the whole drag.
+    const now = performance.now();
+    panSamples.push({ x: e.clientX, y: e.clientY, t: now });
+    while (panSamples.length > 1 && now - panSamples[0].t > VELOCITY_WINDOW_MS) {
+      panSamples.shift();
+    }
   }
 });
 
+// ---- Momentum / inertial panning ----
+const VELOCITY_WINDOW_MS = 90;     // sliding window used to compute release velocity
+const MOMENTUM_MIN_SPEED = 0.08;   // client px/ms; below this we don't start momentum
+const MOMENTUM_STOP_SPEED = 0.015; // stop animation when speed drops below this
+const MOMENTUM_DECAY_PER_FRAME = 0.93; // 7% velocity loss per 16ms frame
+let panSamples = [];                // [{x, y, t}]  recent pointer positions during pan
+let momentumAnim = null;
+let momentumV = { vx: 0, vy: 0 };   // in client pixels/ms
+
+function cancelMomentum() {
+  if (momentumAnim) {
+    cancelAnimationFrame(momentumAnim);
+    momentumAnim = null;
+  }
+  momentumV.vx = 0;
+  momentumV.vy = 0;
+}
+
+function startMomentumFromSamples() {
+  if (panSamples.length < 2) return;
+  const oldest = panSamples[0];
+  const newest = panSamples[panSamples.length - 1];
+  const dt = newest.t - oldest.t;
+  if (dt <= 0) return;
+  const vx = (newest.x - oldest.x) / dt;
+  const vy = (newest.y - oldest.y) / dt;
+  const speed = Math.hypot(vx, vy);
+  if (speed < MOMENTUM_MIN_SPEED) return;
+  momentumV.vx = vx;
+  momentumV.vy = vy;
+
+  let lastT = performance.now();
+  function step(now) {
+    const frameDt = now - lastT;
+    lastT = now;
+    // Exponential decay scaled to the frame time so behavior is framerate-independent
+    const decay = Math.pow(MOMENTUM_DECAY_PER_FRAME, frameDt / 16);
+    momentumV.vx *= decay;
+    momentumV.vy *= decay;
+    // Apply to the view transform (client->transform conversion divides by scale)
+    state.viewTransform.x += (momentumV.vx * frameDt) / state.viewTransform.scale;
+    state.viewTransform.y += (momentumV.vy * frameDt) / state.viewTransform.scale;
+    applyViewTransform();
+    if (Math.hypot(momentumV.vx, momentumV.vy) > MOMENTUM_STOP_SPEED) {
+      momentumAnim = requestAnimationFrame(step);
+    } else {
+      momentumAnim = null;
+    }
+  }
+  momentumAnim = requestAnimationFrame(step);
+}
+
 function endPointer(e) {
+  const hadPan = panStart && activePointers.has(e.pointerId);
   activePointers.delete(e.pointerId);
   if (activePointers.size < 2) pinchStart = null;
   if (activePointers.size === 0) {
+    // If we were mid-pan, fling it
+    if (hadPan) startMomentumFromSamples();
+    panSamples = [];
     panStart = null;
     svg.classList.remove("dragging");
   } else if (activePointers.size === 1) {
     // Dropped from pinch back to one finger — restart pan from remaining finger's current position
     const remaining = [...activePointers.values()][0];
-    panStart = { x: remaining.x, y: remaining.y, tx: state.viewTransform.x, ty: state.viewTransform.y };
+    panStart = { x: remaining.x, y: remaining.y, tx: state.viewTransform.x, ty: state.viewTransform.y, moved: false };
+    panSamples = [];
   }
 }
 document.addEventListener("pointerup", endPointer);
