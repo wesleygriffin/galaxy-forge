@@ -1282,7 +1282,14 @@ function renderHex(parent, q, r, key, tileId) {
   // Click handler
   group.addEventListener("click", (e) => {
     e.stopPropagation();
-    if (tileId) showTileMenu(key, tileId, x, y);
+    if (!tileId) return;
+    // Tap the same hex again to close the menu (toggle behavior)
+    const menuOpen = document.getElementById("tile-menu").classList.contains("show");
+    if (menuOpen && state.selectedHex === key) {
+      hideTileMenu();
+    } else {
+      showTileMenu(key, tileId, x, y);
+    }
   });
 
   // Drag handlers (native)
