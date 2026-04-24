@@ -137,16 +137,19 @@
     cursor: pointer;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
     padding: 6px 0;
     user-select: none;
   }
   details.collapsible > summary::-webkit-details-marker { display: none; }
   details.collapsible > summary::after {
     content: "▾";
-    margin-left: 8px;
+    margin-left: auto;
     color: var(--amber);
     font-size: 10px;
     transition: transform 0.15s;
+    flex-shrink: 0;
   }
   details.collapsible[open] > summary::after {
     transform: rotate(180deg);
@@ -157,14 +160,17 @@
     letter-spacing: 0.18em;
     color: var(--amber);
     font-weight: 600;
+    white-space: nowrap;
   }
   .collapsible-hint {
     font-size: 10px;
     color: var(--text-dim);
-    margin-left: auto;
     letter-spacing: normal;
     text-transform: none;
     font-weight: normal;
+    flex: 1;
+    min-width: 0;
+    text-align: right;
   }
   .collapsible-body {
     padding-top: 4px;
@@ -567,7 +573,7 @@
         </div>
       </div>
 
-      <div class="ctrl-group full-width">
+      <div class="ctrl-group">
         <details class="collapsible">
           <summary>
             <span class="collapsible-label">Placement Options<button class="info-icon" data-info="placement-options" aria-label="About placement options">ⓘ</button></span>
@@ -580,7 +586,7 @@
         </details>
       </div>
 
-      <div class="ctrl-group full-width">
+      <div class="ctrl-group">
         <details class="collapsible">
           <summary>
             <span class="collapsible-label">Expansions</span>
@@ -2284,11 +2290,10 @@ function syncUIFromState() {
   const expHint = document.getElementById("expansions-hint");
   if (expHint) {
     const active = [];
-    active.push("Base");
     if (state.expansions.pok) active.push("PoK");
     if (state.expansions.codex) active.push("Codex");
     if (state.expansions.te) active.push("TE");
-    expHint.textContent = active.join(" · ");
+    expHint.textContent = active.length ? active.join(" · ") : "Base only";
   }
   // Placement options summary hint
   const poHint = document.getElementById("placement-options-hint");
