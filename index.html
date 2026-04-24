@@ -73,10 +73,7 @@
   @media (max-width: 820px) {
     #app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
     #sidebar { max-height: 22vh; }
-    #sidebar.collapsed { max-height: 54px; padding-top: 14px; padding-bottom: 14px; overflow: hidden; }
-    #sidebar.collapsed > *:not(.brand-title):not(.brand-sub):not(.brand-rule):not(#sidebar-collapse-btn) { display: none; }
-    #sidebar.collapsed .brand-rule { display: none; }
-    #sidebar-collapse-btn {
+    #sidebar-help-btn {
       position: absolute;
       top: 10px;
       right: 14px;
@@ -85,11 +82,13 @@
       color: var(--amber);
       width: 34px;
       height: 34px;
-      border-radius: 2px;
+      border-radius: 50%;
       font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
       z-index: 5;
     }
+    #sidebar-help-btn:hover { color: var(--amber-bright); border-color: var(--amber); }
 
     /* Hide the settings sheet in the sidebar on mobile; it only appears as an overlay */
     #settings-sheet { display: none; }
@@ -137,7 +136,7 @@
     #sidebar-share-group { display: none; } /* buttons moved to map tools on mobile */
   }
   @media (min-width: 821px) {
-    #sidebar-collapse-btn { display: none; }
+    #sidebar-help-btn { display: none; }
   }
   #sidebar {
     background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
@@ -594,7 +593,7 @@
 <body>
 <div id="app">
   <aside id="sidebar">
-    <button id="sidebar-collapse-btn" title="Toggle controls">☰</button>
+    <button id="sidebar-help-btn" title="Help" aria-label="Help">?</button>
     <div class="brand-title">Galaxy Forge</div>
     <div class="brand-sub">TI4 · PoK · TE · Codex</div>
     <div class="brand-rule"></div>
@@ -696,10 +695,6 @@
         <button class="btn-secondary" id="share-btn">Copy Link</button>
         <button class="btn-secondary" id="export-btn">Export JSON</button>
       </div>
-    </div>
-
-    <div class="hint" style="padding: 10px; border: 1px dashed var(--border); border-radius: 2px;">
-      <strong style="color:var(--amber);">Tip:</strong> Click any tile for controls. Drag tiles to swap. Use ⊞ (top-right) to see unused tiles.
     </div>
   </aside>
 
@@ -2470,9 +2465,10 @@ document.getElementById("drawer-close").onclick = () => {
   document.getElementById("tool-unused").classList.remove("active");
 };
 
-// Sidebar collapse toggle (mobile)
-document.getElementById("sidebar-collapse-btn").onclick = () => {
-  document.getElementById("sidebar").classList.toggle("collapsed");
+// Sidebar help button (mobile)
+document.getElementById("sidebar-help-btn").onclick = (e) => {
+  e.stopPropagation();
+  showInfoPopup("app-help", e.currentTarget);
 };
 
 // Mobile settings sheet open/close
@@ -2485,6 +2481,12 @@ document.getElementById("settings-close").onclick = () => {
 
 // ---- Help popups for control headers ----
 const HELP_TEXT = {
+  "app-help": `<h4>Galaxy Forge</h4>
+    <p><strong>Tip:</strong> Tap any tile for controls. Long-press + drag to swap tiles. Use ⊞ to see unused tiles.</p>
+    <p>Pan by dragging. Pinch to zoom. Double-tap to reset the view.</p>
+    <p>🔧 opens settings. ↻ forges a new galaxy (keeps locked tiles). Clear Locks &amp; Filters (in settings) wipes locks and include/exclude filters.</p>
+    <p style="color: var(--copper); font-size: 11px; margin-top: 10px;">Base + PoK tile data is verified. Thunder's Edge tiles (Fracture, expedition systems) are included structurally — verify against your TE rulebook before tournament play.</p>`,
+
   "board-style": `<h4>Board Style</h4>
     <p>Changes how the tiles are actually laid out on a newly generated map.</p>
     <p>Changing this would cause you to expect different hex layouts, such as different patterns of tiles, usage of hyperlanes, or unorthodox placement of home worlds.</p>`,
