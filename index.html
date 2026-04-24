@@ -519,10 +519,7 @@
 
     <div class="ctrl-group">
       <button class="btn-primary" id="generate-btn">Forge Galaxy</button>
-      <div class="btn-row">
-        <button class="btn-secondary" id="regenerate-btn">Regenerate</button>
-        <button class="btn-secondary" id="clear-locks-btn">Clear Locks</button>
-      </div>
+      <button class="btn-secondary" id="clear-locks-btn" style="margin-top: 6px;">Clear Locks &amp; Filters</button>
     </div>
 
     <div class="ctrl-group">
@@ -2261,10 +2258,8 @@ document.getElementById("weighting").onchange = (e) => {
 
 // Generate
 document.getElementById("generate-btn").onclick = () => {
-  state.locked.clear();
   generateMap();
 };
-document.getElementById("regenerate-btn").onclick = () => generateMap();
 document.getElementById("clear-locks-btn").onclick = () => {
   state.locked.clear();
   state.includeTiles.clear();
