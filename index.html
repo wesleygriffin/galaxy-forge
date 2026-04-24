@@ -1638,37 +1638,104 @@ svg.addEventListener("drop", (e) => {
 });
 
 /* =============================================================================
-   VIEW CONTROLS (pan/zoom)
+   VIEW CONTROLS (pan/zoom) — supports mouse drag, wheel zoom, and pinch-to-zoom
 ============================================================================= */
 
+const activePointers = new Map(); // pointerId -> {x, y}
 let panStart = null;
-svg.addEventListener("pointerdown", (e) => {
-  // Only pan if clicking the SVG background (not a hex)
-  if (e.target.closest(".hex-wrapper")) return;
-  panStart = { x: e.clientX, y: e.clientY, tx: state.viewTransform.x, ty: state.viewTransform.y };
-  svg.classList.add("dragging");
-  hideTileMenu();
-});
-document.addEventListener("pointermove", (e) => {
-  if (!panStart) return;
-  const dx = (e.clientX - panStart.x) / state.viewTransform.scale;
-  const dy = (e.clientY - panStart.y) / state.viewTransform.scale;
-  state.viewTransform.x = panStart.tx + dx;
-  state.viewTransform.y = panStart.ty + dy;
+let pinchStart = null;
+
+function applyViewTransform() {
   const g = document.getElementById("board-g");
   if (g) g.setAttribute("transform", `scale(${state.viewTransform.scale}) translate(${state.viewTransform.x} ${state.viewTransform.y})`);
+}
+
+svg.addEventListener("pointerdown", (e) => {
+  // Only react if pressing the SVG background (not a hex — hex drag handled separately)
+  if (e.target.closest(".hex-wrapper")) return;
+
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  try { svg.setPointerCapture(e.pointerId); } catch (_) {}
+
+  if (activePointers.size === 1) {
+    // Start pan
+    panStart = { x: e.clientX, y: e.clientY, tx: state.viewTransform.x, ty: state.viewTransform.y };
+    svg.classList.add("dragging");
+    hideTileMenu();
+  } else if (activePointers.size === 2) {
+    // Second finger down — switch to pinch mode, cancel pan
+    panStart = null;
+    const pts = [...activePointers.values()];
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    const midX = (pts[0].x + pts[1].x) / 2;
+    const midY = (pts[0].y + pts[1].y) / 2;
+    pinchStart = {
+      dist,
+      scale: state.viewTransform.scale,
+      tx: state.viewTransform.x,
+      ty: state.viewTransform.y,
+      midX, midY,
+    };
+  }
 });
-document.addEventListener("pointerup", () => {
-  panStart = null;
-  svg.classList.remove("dragging");
+
+document.addEventListener("pointermove", (e) => {
+  // Update tracked pointer position (only if we're tracking it)
+  if (activePointers.has(e.pointerId)) {
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  }
+
+  if (activePointers.size === 2 && pinchStart) {
+    // Pinch zoom — adjust scale by the ratio of current to starting distance.
+    // Also translate so the pinch midpoint stays anchored under the fingers.
+    const pts = [...activePointers.values()];
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    if (dist < 5) return; // ignore degenerate
+    const ratio = dist / pinchStart.dist;
+    const newScale = Math.max(0.3, Math.min(3, pinchStart.scale * ratio));
+
+    // Current pinch midpoint
+    const midX = (pts[0].x + pts[1].x) / 2;
+    const midY = (pts[0].y + pts[1].y) / 2;
+    // Move the view so that the content under the original midpoint stays under
+    // the current midpoint. In pre-transform units (divide by scale).
+    const effectiveRatio = newScale / pinchStart.scale;
+    const dx = (midX - pinchStart.midX) / newScale;
+    const dy = (midY - pinchStart.midY) / newScale;
+    state.viewTransform.scale = newScale;
+    state.viewTransform.x = pinchStart.tx / effectiveRatio + dx;
+    state.viewTransform.y = pinchStart.ty / effectiveRatio + dy;
+    applyViewTransform();
+  } else if (activePointers.size === 1 && panStart) {
+    // Single-finger / mouse pan
+    const dx = (e.clientX - panStart.x) / state.viewTransform.scale;
+    const dy = (e.clientY - panStart.y) / state.viewTransform.scale;
+    state.viewTransform.x = panStart.tx + dx;
+    state.viewTransform.y = panStart.ty + dy;
+    applyViewTransform();
+  }
 });
+
+function endPointer(e) {
+  activePointers.delete(e.pointerId);
+  if (activePointers.size < 2) pinchStart = null;
+  if (activePointers.size === 0) {
+    panStart = null;
+    svg.classList.remove("dragging");
+  } else if (activePointers.size === 1) {
+    // Dropped from pinch back to one finger — restart pan from remaining finger's current position
+    const remaining = [...activePointers.values()][0];
+    panStart = { x: remaining.x, y: remaining.y, tx: state.viewTransform.x, ty: state.viewTransform.y };
+  }
+}
+document.addEventListener("pointerup", endPointer);
+document.addEventListener("pointercancel", endPointer);
 
 svg.addEventListener("wheel", (e) => {
   e.preventDefault();
   const factor = e.deltaY < 0 ? 1.1 : 0.9;
   state.viewTransform.scale = Math.max(0.3, Math.min(3, state.viewTransform.scale * factor));
-  const g = document.getElementById("board-g");
-  if (g) g.setAttribute("transform", `scale(${state.viewTransform.scale}) translate(${state.viewTransform.x} ${state.viewTransform.y})`);
+  applyViewTransform();
 }, { passive: false });
 
 /* =============================================================================
@@ -1834,13 +1901,11 @@ document.getElementById("drawer-close").onclick = () => {
 };
 document.getElementById("tool-zoom-in").onclick = () => {
   state.viewTransform.scale = Math.min(3, state.viewTransform.scale * 1.15);
-  const g = document.getElementById("board-g");
-  if (g) g.setAttribute("transform", `scale(${state.viewTransform.scale}) translate(${state.viewTransform.x} ${state.viewTransform.y})`);
+  applyViewTransform();
 };
 document.getElementById("tool-zoom-out").onclick = () => {
   state.viewTransform.scale = Math.max(0.3, state.viewTransform.scale * 0.87);
-  const g = document.getElementById("board-g");
-  if (g) g.setAttribute("transform", `scale(${state.viewTransform.scale}) translate(${state.viewTransform.x} ${state.viewTransform.y})`);
+  applyViewTransform();
 };
 document.getElementById("tool-reset-view").onclick = () => {
   state.viewTransform = { x: 0, y: 0, scale: 1 };
