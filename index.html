@@ -132,6 +132,43 @@
   }
   .ctrl-grid > .ctrl-group { margin-bottom: 0; }
   .ctrl-grid > .full-width { grid-column: 1 / -1; }
+  details.collapsible > summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    user-select: none;
+  }
+  details.collapsible > summary::-webkit-details-marker { display: none; }
+  details.collapsible > summary::after {
+    content: "▾";
+    margin-left: 8px;
+    color: var(--amber);
+    font-size: 10px;
+    transition: transform 0.15s;
+  }
+  details.collapsible[open] > summary::after {
+    transform: rotate(180deg);
+  }
+  .collapsible-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--amber);
+    font-weight: 600;
+  }
+  .collapsible-hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-left: auto;
+    letter-spacing: normal;
+    text-transform: none;
+    font-weight: normal;
+  }
+  .collapsible-body {
+    padding-top: 4px;
+  }
   .ctrl-label {
     display: block;
     font-size: 10px;
@@ -537,10 +574,17 @@
       </div>
 
       <div class="ctrl-group full-width">
-        <label class="ctrl-label">Expansions</label>
-        <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
-        <div class="toggle-row on" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
-        <div class="toggle-row on" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
+        <details class="collapsible">
+          <summary>
+            <span class="collapsible-label">Expansions</span>
+            <span class="collapsible-hint" id="expansions-hint"></span>
+          </summary>
+          <div class="collapsible-body">
+            <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
+            <div class="toggle-row on" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
+            <div class="toggle-row on" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -2229,6 +2273,16 @@ function syncUIFromState() {
       el.classList.toggle("on", state.reversePlacement);
     }
   });
+  // Expansions summary hint
+  const expHint = document.getElementById("expansions-hint");
+  if (expHint) {
+    const active = [];
+    active.push("Base");
+    if (state.expansions.pok) active.push("PoK");
+    if (state.expansions.codex) active.push("Codex");
+    if (state.expansions.te) active.push("TE");
+    expHint.textContent = active.join(" · ");
+  }
   // Selects
   document.getElementById("board-style").value = state.boardStyle;
   document.getElementById("placement-style").value = state.placementStyle;
