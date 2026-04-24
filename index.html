@@ -568,9 +568,16 @@
       </div>
 
       <div class="ctrl-group full-width">
-        <label class="ctrl-label">Placement Options<button class="info-icon" data-info="placement-options" aria-label="About placement options">ⓘ</button></label>
-        <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
-        <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
+        <details class="collapsible">
+          <summary>
+            <span class="collapsible-label">Placement Options<button class="info-icon" data-info="placement-options" aria-label="About placement options">ⓘ</button></span>
+            <span class="collapsible-hint" id="placement-options-hint"></span>
+          </summary>
+          <div class="collapsible-body">
+            <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
+            <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
+          </div>
+        </details>
       </div>
 
       <div class="ctrl-group full-width">
@@ -2282,6 +2289,14 @@ function syncUIFromState() {
     if (state.expansions.codex) active.push("Codex");
     if (state.expansions.te) active.push("TE");
     expHint.textContent = active.join(" · ");
+  }
+  // Placement options summary hint
+  const poHint = document.getElementById("placement-options-hint");
+  if (poHint) {
+    const on = [];
+    if (state.shufflePriority) on.push("Shuffle");
+    if (state.reversePlacement) on.push("Reverse");
+    poHint.textContent = on.length ? on.join(" · ") : "Default";
   }
   // Selects
   document.getElementById("board-style").value = state.boardStyle;
