@@ -1592,6 +1592,10 @@ let pointerDragData = null;
 function startHexDrag(e, key, tileId) {
   if (!tileId) return;
   if (e.pointerType === "mouse" && e.button !== 0) return;
+  // On touch, skip hex drag entirely and let the svg pan/pinch handler take over.
+  // Tapping (no drag) will still fire the click event and open the tile menu.
+  // For touch-based tile swaps, use the menu's "Swap with unused tile" or drag from the drawer.
+  if (e.pointerType === "touch") return;
   pointerDragData = { key, tileId, startX: e.clientX, startY: e.clientY, moved: false };
 }
 
@@ -1674,17 +1678,23 @@ function applyViewTransform() {
 }
 
 svg.addEventListener("pointerdown", (e) => {
-  // Only react if pressing the SVG background (not a hex — hex drag handled separately)
-  if (e.target.closest(".hex-wrapper")) return;
+  // On mouse/pen, let the hex handler own pointerdowns on hexes (enables drag-to-swap).
+  // On touch, hex taps still fire `click` to open the menu — but a drag on a hex
+  // should pan the map, so we don't bail out here.
+  if (e.pointerType !== "touch" && e.target.closest(".hex-wrapper")) return;
 
   activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  try { svg.setPointerCapture(e.pointerId); } catch (_) {}
+  // Only capture the pointer if the touch started on the svg background. When a touch
+  // starts on a hex, leaving the native target lets the browser still fire a `click`
+  // event on the hex for quick taps (which opens the tile menu).
+  if (!e.target.closest(".hex-wrapper")) {
+    try { svg.setPointerCapture(e.pointerId); } catch (_) {}
+  }
 
   if (activePointers.size === 1) {
     // Start pan
-    panStart = { x: e.clientX, y: e.clientY, tx: state.viewTransform.x, ty: state.viewTransform.y };
+    panStart = { x: e.clientX, y: e.clientY, tx: state.viewTransform.x, ty: state.viewTransform.y, moved: false };
     svg.classList.add("dragging");
-    hideTileMenu();
   } else if (activePointers.size === 2) {
     // Second finger down — switch to pinch mode, cancel pan
     panStart = null;
@@ -1699,6 +1709,7 @@ svg.addEventListener("pointerdown", (e) => {
       ty: state.viewTransform.y,
       midX, midY,
     };
+    hideTileMenu();
   }
 });
 
