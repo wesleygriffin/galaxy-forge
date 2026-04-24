@@ -470,14 +470,14 @@
 
     <div class="ctrl-group">
       <label class="ctrl-label">Players</label>
-      <div class="segmented" id="player-count">
-        <button data-val="3">3</button>
-        <button data-val="4">4</button>
-        <button data-val="5">5</button>
-        <button data-val="6" class="active">6</button>
-        <button data-val="7">7</button>
-        <button data-val="8">8</button>
-      </div>
+      <select id="player-count">
+        <option value="3">3 Players</option>
+        <option value="4">4 Players</option>
+        <option value="5">5 Players</option>
+        <option value="6" selected>6 Players</option>
+        <option value="7">7 Players</option>
+        <option value="8">8 Players</option>
+      </select>
     </div>
 
     <div class="ctrl-group">
@@ -2204,9 +2204,7 @@ function openShareModal() {
 
 function syncUIFromState() {
   // Player count
-  document.querySelectorAll("#player-count button").forEach(b => {
-    b.classList.toggle("active", Number(b.dataset.val) === state.playerCount);
-  });
+  document.getElementById("player-count").value = String(state.playerCount);
   // Expansions
   document.querySelectorAll("[data-toggle]").forEach(el => {
     const key = el.dataset.toggle;
@@ -2237,12 +2235,9 @@ function syncUIFromState() {
 ============================================================================= */
 
 // Player count
-document.querySelectorAll("#player-count button").forEach(b => {
-  b.onclick = () => {
-    state.playerCount = Number(b.dataset.val);
-    syncUIFromState();
-  };
-});
+document.getElementById("player-count").onchange = (e) => {
+  state.playerCount = Number(e.target.value);
+};
 
 // Toggles
 document.querySelectorAll("[data-toggle]").forEach(el => {
