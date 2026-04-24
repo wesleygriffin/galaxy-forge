@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -343,92 +342,89 @@
     <div class="brand-sub">TI4 · PoK · TE · Codex</div>
     <div class="brand-rule"></div>
 
-```
-<div class="ctrl-group">
-  <label class="ctrl-label">Players</label>
-  <div class="segmented" id="player-count">
-    <button data-val="3">3</button>
-    <button data-val="4">4</button>
-    <button data-val="5">5</button>
-    <button data-val="6" class="active">6</button>
-    <button data-val="7">7</button>
-    <button data-val="8">8</button>
-  </div>
-</div>
+    <div class="ctrl-group">
+      <label class="ctrl-label">Players</label>
+      <div class="segmented" id="player-count">
+        <button data-val="3">3</button>
+        <button data-val="4">4</button>
+        <button data-val="5">5</button>
+        <button data-val="6" class="active">6</button>
+        <button data-val="7">7</button>
+        <button data-val="8">8</button>
+      </div>
+    </div>
 
-<div class="ctrl-group">
-  <label class="ctrl-label">Expansions</label>
-  <div class="toggle-row on" data-toggle="base"><div class="toggle-track"></div><div class="toggle-label">Base Game<span class="toggle-sub">17 factions · 32 systems</span></div></div>
-  <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
-  <div class="toggle-row" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
-  <div class="toggle-row" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
-</div>
+    <div class="ctrl-group">
+      <label class="ctrl-label">Expansions</label>
+      <div class="toggle-row on" data-toggle="base"><div class="toggle-track"></div><div class="toggle-label">Base Game<span class="toggle-sub">17 factions · 32 systems</span></div></div>
+      <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
+      <div class="toggle-row" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
+      <div class="toggle-row" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
+    </div>
 
-<div class="ctrl-group">
-  <label class="ctrl-label">Board Style</label>
-  <select id="board-style">
-    <option value="standard">Standard</option>
-    <option value="large">Large Galaxy</option>
-    <option value="hyperlane">Hyperlane Variant</option>
-  </select>
-</div>
+    <div class="ctrl-group">
+      <label class="ctrl-label">Board Style</label>
+      <select id="board-style">
+        <option value="standard">Standard</option>
+        <option value="large">Large Galaxy</option>
+        <option value="hyperlane">Hyperlane Variant</option>
+      </select>
+    </div>
 
-<div class="ctrl-group">
-  <label class="ctrl-label">Placement Style</label>
-  <select id="placement-style">
-    <option value="slice">Slice — full slice</option>
-    <option value="initial">Initial — first tile only</option>
-    <option value="home">Home — home-adjacent</option>
-    <option value="random">Random</option>
-  </select>
-</div>
+    <div class="ctrl-group">
+      <label class="ctrl-label">Placement Style</label>
+      <select id="placement-style">
+        <option value="slice">Slice — full slice</option>
+        <option value="initial">Initial — first tile only</option>
+        <option value="home">Home — home-adjacent</option>
+        <option value="random">Random</option>
+      </select>
+    </div>
 
-<div class="ctrl-group">
-  <label class="ctrl-label">System Weighting</label>
-  <select id="weighting">
-    <option value="balanced">Balanced</option>
-    <option value="resource">Resource</option>
-    <option value="influence">Influence</option>
-    <option value="random">Random</option>
-    <option value="custom">Custom…</option>
-  </select>
-  <div class="custom-weights" id="custom-weights">
-    <div class="weight-row"><label>Resources</label><input type="number" step="0.1" id="w-res" value="1.0"></div>
-    <div class="weight-row"><label>Influence</label><input type="number" step="0.1" id="w-inf" value="1.0"></div>
-    <div class="weight-row"><label>Planet Count</label><input type="number" step="0.1" id="w-pc" value="0.5"></div>
-    <div class="weight-row"><label>Tech Specialty</label><input type="number" step="0.1" id="w-tech" value="1.0"></div>
-    <div class="weight-row"><label>Legendary</label><input type="number" step="0.1" id="w-legend" value="2.0"></div>
-    <div class="weight-row"><label>Anomaly Penalty</label><input type="number" step="0.1" id="w-anomaly" value="-1.0"></div>
-  </div>
-</div>
+    <div class="ctrl-group">
+      <label class="ctrl-label">System Weighting</label>
+      <select id="weighting">
+        <option value="balanced">Balanced</option>
+        <option value="resource">Resource</option>
+        <option value="influence">Influence</option>
+        <option value="random">Random</option>
+        <option value="custom">Custom…</option>
+      </select>
+      <div class="custom-weights" id="custom-weights">
+        <div class="weight-row"><label>Resources</label><input type="number" step="0.1" id="w-res" value="1.0"></div>
+        <div class="weight-row"><label>Influence</label><input type="number" step="0.1" id="w-inf" value="1.0"></div>
+        <div class="weight-row"><label>Planet Count</label><input type="number" step="0.1" id="w-pc" value="0.5"></div>
+        <div class="weight-row"><label>Tech Specialty</label><input type="number" step="0.1" id="w-tech" value="1.0"></div>
+        <div class="weight-row"><label>Legendary</label><input type="number" step="0.1" id="w-legend" value="2.0"></div>
+        <div class="weight-row"><label>Anomaly Penalty</label><input type="number" step="0.1" id="w-anomaly" value="-1.0"></div>
+      </div>
+    </div>
 
-<div class="ctrl-group">
-  <label class="ctrl-label">Placement Options</label>
-  <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
-  <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
-</div>
+    <div class="ctrl-group">
+      <label class="ctrl-label">Placement Options</label>
+      <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
+      <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
+    </div>
 
-<div class="ctrl-group">
-  <button class="btn-primary" id="generate-btn">Forge Galaxy</button>
-  <div class="btn-row">
-    <button class="btn-secondary" id="regenerate-btn">Regenerate</button>
-    <button class="btn-secondary" id="clear-locks-btn">Clear Locks</button>
-  </div>
-</div>
+    <div class="ctrl-group">
+      <button class="btn-primary" id="generate-btn">Forge Galaxy</button>
+      <div class="btn-row">
+        <button class="btn-secondary" id="regenerate-btn">Regenerate</button>
+        <button class="btn-secondary" id="clear-locks-btn">Clear Locks</button>
+      </div>
+    </div>
 
-<div class="ctrl-group">
-  <label class="ctrl-label">Share</label>
-  <div class="btn-row">
-    <button class="btn-secondary" id="share-btn">Copy Link</button>
-    <button class="btn-secondary" id="export-btn">Export JSON</button>
-  </div>
-</div>
+    <div class="ctrl-group">
+      <label class="ctrl-label">Share</label>
+      <div class="btn-row">
+        <button class="btn-secondary" id="share-btn">Copy Link</button>
+        <button class="btn-secondary" id="export-btn">Export JSON</button>
+      </div>
+    </div>
 
-<div class="hint" style="padding: 10px; border: 1px dashed var(--border); border-radius: 2px;">
-  <strong style="color:var(--amber);">Tip:</strong> Click any tile for controls. Drag tiles to swap. Use ⊞ (top-right) to see unused tiles.
-</div>
-```
-
+    <div class="hint" style="padding: 10px; border: 1px dashed var(--border); border-radius: 2px;">
+      <strong style="color:var(--amber);">Tip:</strong> Click any tile for controls. Drag tiles to swap. Use ⊞ (top-right) to see unused tiles.
+    </div>
   </aside>
 
   <main id="board-area">
@@ -1810,6 +1806,5 @@ function init() {
 
 init();
 </script>
-
 </body>
 </html>
