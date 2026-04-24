@@ -700,7 +700,7 @@
     <button class="tool-btn" id="mobile-settings-btn" title="Settings" aria-label="Open settings">🔧</button>
     <div class="board-tools">
       <button class="tool-btn tool-btn-primary" id="tool-forge" title="Forge new galaxy (keeps locks)">↻</button>
-      <button class="tool-btn" id="tool-respect-locks" title="Respect locked tiles during generation">🔒</button>
+      <button class="tool-btn" id="tool-respect-locks" title="Respect locked tiles during generation" aria-label="Toggle lock-respecting"></button>
       <button class="tool-btn" id="tool-numbers" title="Toggle tile number overlay">#</button>
       <button class="tool-btn" id="tool-unused" title="Show unused tiles">⊞</button>
     </div>
@@ -2447,10 +2447,14 @@ document.getElementById("tool-forge").onclick = (e) => {
   btn.classList.add("spinning");
   generateMap();
 };
+// Flat SVG lock icons (match the thin, single-color aesthetic of the other tool buttons)
+const LOCK_SVG_CLOSED = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8" width="11" height="7.5" rx="1"/><path d="M 5.5 8 V 5.5 a 3.5 3.5 0 0 1 7 0 V 8"/></svg>`;
+const LOCK_SVG_OPEN = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8" width="11" height="7.5" rx="1"/><path d="M 5.5 8 V 5.5 a 3.5 3.5 0 0 1 7 0 V 6.5"/></svg>`;
+
 document.getElementById("tool-respect-locks").onclick = (e) => {
   state.respectLocks = !state.respectLocks;
   const btn = e.currentTarget;
-  btn.textContent = state.respectLocks ? "🔒" : "🔓";
+  btn.innerHTML = state.respectLocks ? LOCK_SVG_CLOSED : LOCK_SVG_OPEN;
   btn.classList.toggle("active", state.respectLocks);
   btn.title = state.respectLocks
     ? "Locks ON — locked tiles are preserved when forging"
@@ -2459,7 +2463,7 @@ document.getElementById("tool-respect-locks").onclick = (e) => {
 // Set initial visual state for the lock toggle
 (() => {
   const btn = document.getElementById("tool-respect-locks");
-  btn.textContent = state.respectLocks ? "🔒" : "🔓";
+  btn.innerHTML = state.respectLocks ? LOCK_SVG_CLOSED : LOCK_SVG_OPEN;
   btn.classList.toggle("active", state.respectLocks);
 })();
 document.getElementById("tool-numbers").onclick = (e) => {
