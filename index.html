@@ -1138,6 +1138,41 @@ function renderHex(parent, q, r, key, tileId) {
     group.appendChild(numText);
   }
 
+  // Lock badge (top-left)
+  if (state.locked.has(key)) {
+    const lx = -HEX_SIZE * 0.55, ly = -HEX_SIZE * 0.55;
+    const lockBg = svgEl("circle", {
+      cx: lx, cy: ly, r: 10,
+      fill: "var(--cyan)",
+      stroke: "var(--bg-deep)",
+      "stroke-width": 1.5,
+    });
+    group.appendChild(lockBg);
+    // Padlock shackle (arch on top)
+    const shackle = svgEl("path", {
+      d: `M ${lx - 2.5} ${ly - 0.5} v -2 a 2.5 2.5 0 0 1 5 0 v 2`,
+      fill: "none",
+      stroke: "var(--bg-deep)",
+      "stroke-width": 1.4,
+      "stroke-linecap": "round",
+    });
+    group.appendChild(shackle);
+    // Padlock body
+    const body = svgEl("rect", {
+      x: lx - 3.5, y: ly - 0.5,
+      width: 7, height: 5.5,
+      fill: "var(--bg-deep)",
+      rx: 0.8,
+    });
+    group.appendChild(body);
+    // Keyhole dot
+    const keyhole = svgEl("circle", {
+      cx: lx, cy: ly + 2.2, r: 0.8,
+      fill: "var(--cyan)",
+    });
+    group.appendChild(keyhole);
+  }
+
   // Click handler
   group.addEventListener("click", (e) => {
     e.stopPropagation();
