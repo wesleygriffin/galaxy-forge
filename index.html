@@ -1742,10 +1742,60 @@ const activePointers = new Map(); // pointerId -> {x, y}
 let panStart = null;
 let pinchStart = null;
 
+const POINTER_STALE_MS = 1500; // iOS can drop pointer events; prune after this long
+
 function applyViewTransform() {
   const g = document.getElementById("board-g");
   if (g) g.setAttribute("transform", `scale(${state.viewTransform.scale}) translate(${state.viewTransform.x} ${state.viewTransform.y})`);
 }
+
+function pruneStalePointers() {
+  const now = Date.now();
+  for (const [id, p] of activePointers) {
+    if (!p.lastSeen || now - p.lastSeen > POINTER_STALE_MS) {
+      activePointers.delete(id);
+    }
+  }
+  // Reconcile dependent state with the new pointer count
+  if (activePointers.size < 2) pinchStart = null;
+  if (activePointers.size === 0) {
+    panStart = null;
+    svg.classList.remove("dragging");
+  }
+}
+
+function resetAllPointerState() {
+  activePointers.clear();
+  panStart = null;
+  pinchStart = null;
+  clearLongPress();
+  pointerDragData = null;
+  svg.classList.remove("dragging");
+  document.querySelectorAll(".hex-wrapper.drag-over, .hex-wrapper.lifted").forEach(el => {
+    el.classList.remove("drag-over");
+    el.classList.remove("lifted");
+  });
+}
+
+// Safety nets: iOS (and occasionally other browsers) will sometimes drop pointer
+// events on app-switch, home-bar gestures, or when a finger drifts off-screen.
+// These listeners reset gesture state when that happens so the next touch starts clean.
+window.addEventListener("blur", resetAllPointerState);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) resetAllPointerState();
+});
+// pointerleave on the window / html root — if a pointer leaves the document area,
+// treat it as gone.
+document.documentElement.addEventListener("pointerleave", (e) => {
+  if (activePointers.has(e.pointerId)) {
+    activePointers.delete(e.pointerId);
+    if (activePointers.size < 2) pinchStart = null;
+    if (activePointers.size === 0) {
+      panStart = null;
+      svg.classList.remove("dragging");
+    }
+  }
+});
 
 svg.addEventListener("pointerdown", (e) => {
   // On mouse/pen, let the hex handler own pointerdowns on hexes (enables drag-to-swap).
@@ -1753,7 +1803,11 @@ svg.addEventListener("pointerdown", (e) => {
   // should pan the map, so we don't bail out here.
   if (e.pointerType !== "touch" && e.target.closest(".hex-wrapper")) return;
 
-  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  // Prune any stale tracked pointers before adding this one. This handles the case
+  // where iOS dropped a pointerup/pointercancel and left a ghost in activePointers.
+  pruneStalePointers();
+
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY, lastSeen: Date.now() });
   // Only capture the pointer if the touch started on the svg background. When a touch
   // starts on a hex, leaving the native target lets the browser still fire a `click`
   // event on the hex for quick taps (which opens the tile menu).
@@ -1790,9 +1844,9 @@ svg.addEventListener("pointerdown", (e) => {
 });
 
 document.addEventListener("pointermove", (e) => {
-  // Update tracked pointer position (only if we're tracking it)
+  // Update tracked pointer position + lastSeen timestamp
   if (activePointers.has(e.pointerId)) {
-    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY, lastSeen: Date.now() });
   }
 
   if (activePointers.size === 2 && pinchStart) {
