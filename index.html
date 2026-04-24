@@ -1494,20 +1494,45 @@ function showTileMenu(key, tileId, cx, cy) {
 
   menu.classList.add("show");
 
-  // Position menu near the hex
-  const rect = svg.getBoundingClientRect();
-  const svgPt = svg.createSVGPoint();
-  svgPt.x = cx; svgPt.y = cy;
-  const ctm = svg.getScreenCTM();
-  const screenPt = ctm ? svgPt.matrixTransform(ctm) : { x: rect.width/2, y: rect.height/2 };
-
+  // Position the menu relative to where the hex actually appears on screen. Using
+  // getBoundingClientRect on the hex element accounts for the pan/zoom transform
+  // applied to the board group — the old approach used svg.getScreenCTM() which
+  // does NOT see the nested transform, so on a zoomed or panned map the menu
+  // would appear far from the tile.
   const boardRect = document.getElementById("board-area").getBoundingClientRect();
-  const menuW = 250, menuH = 300;
-  let px = screenPt.x - boardRect.left + 30;
-  let py = screenPt.y - boardRect.top - menuH/2;
-  if (px + menuW > boardRect.width) px = screenPt.x - boardRect.left - menuW - 30;
-  if (py < 10) py = 10;
-  if (py + menuH > boardRect.height) py = boardRect.height - menuH - 10;
+  const hexEl = svg.querySelector(`.hex-wrapper[data-key="${key}"]`);
+  let hexCX, hexCY, hexHalfW;
+  if (hexEl) {
+    const hr = hexEl.getBoundingClientRect();
+    hexCX = hr.left + hr.width / 2 - boardRect.left;
+    hexCY = hr.top + hr.height / 2 - boardRect.top;
+    hexHalfW = hr.width / 2;
+  } else {
+    hexCX = boardRect.width / 2;
+    hexCY = boardRect.height / 2;
+    hexHalfW = 40;
+  }
+
+  // Measure the menu's actual rendered size instead of guessing (menu content
+  // varies with planet count, wormholes, etc.).
+  const menuRect = menu.getBoundingClientRect();
+  const menuW = menuRect.width;
+  const menuH = menuRect.height;
+  const GAP = 10;
+
+  // Prefer placing to the right of the hex; fall back to left if it overflows.
+  let px = hexCX + hexHalfW + GAP;
+  let py = hexCY - menuH / 2;
+  if (px + menuW > boardRect.width - GAP) {
+    px = hexCX - hexHalfW - menuW - GAP;
+  }
+  // If it still overflows either edge (hex is wider than both sides allow),
+  // clamp to the closest edge and let the menu float over the hex.
+  if (px < GAP) px = GAP;
+  if (px + menuW > boardRect.width - GAP) px = boardRect.width - menuW - GAP;
+  // Vertical clamp
+  if (py < GAP) py = GAP;
+  if (py + menuH > boardRect.height - GAP) py = boardRect.height - menuH - GAP;
 
   menu.style.left = px + "px";
   menu.style.top = py + "px";
