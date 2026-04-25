@@ -2538,7 +2538,13 @@ document.getElementById("settings-close").onclick = () => {
 // ---- Help popups for control headers ----
 const HELP_TEXT = {
   "app-help": `<h4>Galaxy Forge</h4>
-    <p><strong>Tip:</strong> Tap any tile for controls. Long-press + drag to swap tiles. Pan by dragging. Pinch to zoom. Double-tap to reset the view.</p>
+    <p style="color: var(--amber); font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; font-weight: 600; margin-bottom: 4px;">Controls</p>
+    <ul>
+      <li>Long-press + drag to swap tiles.</li>
+      <li>Pan by dragging.</li>
+      <li>Pinch to zoom.</li>
+      <li>Double-tap to reset the view.</li>
+    </ul>
     <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> opens settings. Adjust player count, board style, placement style, weighting, expansions, and toggles. Clear Locks &amp; Filters lives at the bottom of the sheet to wipe lock and include/exclude state.</p>
     <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> copies a shareable link to the clipboard. The URL encodes the current map, player count, options, locks, and filters — open it on any device to see the same galaxy.</p>
     <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> exports the current map state as a JSON file. Useful for backing up a setup, sharing with tools that consume galaxy data, or reloading later.</p>
