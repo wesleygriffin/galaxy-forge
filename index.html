@@ -566,6 +566,17 @@
     z-index: 10;
   }
   .confidence-note { color: var(--copper); margin-top: 2px; font-size: 10px; }
+  .board-version {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.12em;
+    font-variant-numeric: tabular-nums;
+    z-index: 10;
+    pointer-events: none;
+  }
   #tile-menu {
     position: absolute;
     background: rgba(14, 20, 28, 0.97);
@@ -886,6 +897,7 @@
     <div class="board-status" id="board-status">
       Galaxy awaiting forge. Press <strong style="color:var(--amber);">Forge Galaxy</strong> to begin.
     </div>
+    <div class="board-version" id="board-version" aria-hidden="true"></div>
     <div id="tile-menu"></div>
     <div id="drag-ghost"></div>
     <div id="unused-drawer">
@@ -911,6 +923,14 @@
 </div>
 
 <script>
+/* Bump this when shipping a noticeable change. Rendered in dimmed text in the
+   bottom-right of the map view by the snippet a few lines below. */
+const APP_VERSION = "0.1.0";
+(() => {
+  const el = document.getElementById("board-version");
+  if (el) el.textContent = "v" + APP_VERSION;
+})();
+
 /* =============================================================================
    TILE DATA
    Format: id => { name, expansion, type, back, planets[], anomalies[], wormholes[], faction? }
