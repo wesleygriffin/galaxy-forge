@@ -1173,9 +1173,10 @@ const state = {
    UTILITIES
 ============================================================================= */
 
-const HEX_SIZE = 54; // radius
-const HEX_W = Math.sqrt(3) * HEX_SIZE;
-const HEX_H = 2 * HEX_SIZE;
+const HEX_SIZE = 54; // radius (center to vertex)
+// Flat-top hex orientation: vertices on left/right, flat sides on top/bottom
+const HEX_W = 2 * HEX_SIZE;            // point-to-point (horizontal)
+const HEX_H = Math.sqrt(3) * HEX_SIZE; // flat-to-flat (vertical)
 
 // Tile IDs we have a mirrored image for (in /tiles/{id}.webp). Pulled from
 // KeeganW/ti4 (Base + PoK, IDs 0-82). Stored as a Set for O(1) lookup.
@@ -1190,17 +1191,18 @@ const TILE_IMG_H = 315;
 function hexKey(q, r) { return `${q},${r}`; }
 function parseKey(k) { const [q,r] = k.split(",").map(Number); return [q,r]; }
 
-// Axial to pixel (flat-top)
+// Axial to pixel — flat-top orientation
 function axialToPixel(q, r) {
-  const x = HEX_SIZE * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
-  const y = HEX_SIZE * (3/2 * r);
+  const x = HEX_SIZE * (3/2 * q);
+  const y = HEX_SIZE * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r);
   return { x, y };
 }
 
+// Flat-top hex polygon: vertices at 0°, 60°, 120°, 180°, 240°, 300°
 function hexPoints(cx, cy, size) {
   const pts = [];
   for (let i = 0; i < 6; i++) {
-    const angle = Math.PI / 180 * (60 * i - 30);
+    const angle = Math.PI / 180 * (60 * i);
     pts.push([cx + size * Math.cos(angle), cy + size * Math.sin(angle)]);
   }
   return pts.map(p => p.join(",")).join(" ");
@@ -1548,10 +1550,10 @@ function renderHex(parent, q, r, key, tileId) {
   // Inner details: prefer the mirrored tile image when we have one;
   // otherwise fall back to the SVG-drawn content (TE tiles, missing Codex).
   if (sys && tileId != null && TILE_IMAGE_IDS.has(Number(tileId))) {
-    // Source images are flat-top oriented; our hex grid is pointy-top, so
-    // rotate by 30° to align them. After rotation the image must still cover
-    // the hex's bounding box (point-to-point = HEX_H), so size from that.
-    const imgW = HEX_H;
+    // Source images are flat-top oriented; our hex grid is now flat-top too,
+    // so no rotation needed. Size by HEX_W (point-to-point horizontal) so
+    // the image spans the full width; vertical excess is clipped.
+    const imgW = HEX_W;
     const imgH = imgW * (TILE_IMG_H / TILE_IMG_W);
     const tileImg = svgEl("image", {
       x: -imgW / 2,
@@ -1561,7 +1563,6 @@ function renderHex(parent, q, r, key, tileId) {
       href: `tiles/${tileId}.webp`,
       "clip-path": "url(#hex-clip)",
       preserveAspectRatio: "xMidYMid slice",
-      transform: "rotate(30)",
     });
     // Fallback for older browsers that don't honor href on SVG <image>
     tileImg.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", `tiles/${tileId}.webp`);
