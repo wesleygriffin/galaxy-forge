@@ -885,10 +885,9 @@
     </div>
 
     <div class="ctrl-group" id="sidebar-share-group">
-      <label class="ctrl-label">Share</label>
       <div class="btn-row">
-        <button class="btn-secondary" id="share-btn">Copy Link</button>
-        <button class="btn-secondary" id="export-btn">Export JSON</button>
+        <button class="btn-secondary" id="share-btn">Copy</button>
+        <button class="btn-secondary" id="export-btn">Save</button>
       </div>
     </div>
   </aside>
@@ -940,7 +939,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.7";
+const APP_VERSION = "0.1.8";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
