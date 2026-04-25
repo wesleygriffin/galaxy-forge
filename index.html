@@ -249,7 +249,12 @@
 
     /* Collapsed state — sidebar hidden, map area takes the full width.
        Overrides #app's grid template so the sidebar column is 0 regardless of
-       the inline-set --sidebar-width (which is preserved for when we expand). */
+       the inline-set --sidebar-width (which is preserved for when we expand).
+       #board-area is explicitly placed in column 2 (see the base #board-area
+       rule below) — without that, display:none on #sidebar removes it from
+       the grid and grid auto-flow places #board-area into column 1, which
+       is the 0px-wide track. The whole map area would then collapse to 0
+       and only the position:fixed toggle would remain visible. */
     html.sidebar-collapsed #app { grid-template-columns: 0 1fr; }
     html.sidebar-collapsed #sidebar { display: none; }
     html.sidebar-collapsed #sidebar-resize { display: none; }
@@ -261,7 +266,7 @@
       border-bottom-left-radius: 0;
     }
   }
-  #board-area { position: relative; overflow: hidden; }
+  #board-area { position: relative; overflow: hidden; grid-column: 2; }
   #board-viewport {
     width: 100%;
     height: 100%;
@@ -951,7 +956,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.4";
+const APP_VERSION = "0.1.5";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
