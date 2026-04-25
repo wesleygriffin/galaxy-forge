@@ -74,22 +74,27 @@
     #app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
     #sidebar {
       max-height: none;
+      height: auto;
+      min-height: 0;
       padding: 10px 14px;
       display: flex;
       align-items: center;
       gap: 10px;
       border-bottom: 1px solid var(--border);
+      overflow: visible;
     }
     #sidebar .brand-title {
       font-size: 15px;
       letter-spacing: 0.2em;
       flex: 1;
       margin: 0;
+      order: 1;  /* title first, button second */
     }
     #sidebar .brand-rule { display: none; }
     #sidebar-help-btn {
       position: static;
       flex-shrink: 0;
+      order: 2;  /* help button appears after title (right side) */
       background: var(--bg-deep);
       border: 1px solid var(--border-strong);
       color: var(--amber);
