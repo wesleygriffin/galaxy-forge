@@ -333,6 +333,29 @@
     text-transform: none;
     font-weight: normal;
   }
+  .info-popup-large {
+    max-width: min(420px, calc(100vw - 32px));
+    padding-right: 36px; /* leave room for close button */
+  }
+  .info-popup-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .info-popup-close:hover { color: var(--amber); border-color: var(--amber); }
   .info-popup h4 {
     color: var(--amber-bright);
     font-size: 12px;
@@ -2523,7 +2546,7 @@ const HELP_TEXT = {
     <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">#</span> toggles the tile-number overlay. Useful for cross-referencing system IDs against the rulebook or comparing setups by tile composition.</p>
     <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">⊞</span> opens the unused-tile drawer. See every tile not currently on the board, drag any of them onto a hex to swap it in, or use them to build a custom layout from scratch.</p>
     <p style="color: var(--copper); font-size: 11px; margin-top: 10px;">Base + PoK tile data is verified. Thunder's Edge tiles (Fracture, expedition systems) are included structurally — verify against your TE rulebook before tournament play.</p>
-    <p style="margin-top: 12px;"><button class="info-link" id="export-systems-btn">Export all hex data (JSON) <span>⬇</span></button></p>`,
+    <p style="margin-top: 12px;"><button class="info-link" id="export-systems-btn">Export all hex data (JSON) <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button></p>`,
 
   "board-style": `<h4>Board Style</h4>
     <p>Changes how the tiles are actually laid out on a newly generated map.</p>
@@ -2570,11 +2593,18 @@ function showInfoPopup(key, anchor) {
   }
   closeInfoPopup();
   const popup = document.createElement("div");
-  popup.className = "info-popup";
+  popup.className = "info-popup" + (key === "app-help" ? " info-popup-large" : "");
   popup.dataset.forKey = key;
-  popup.innerHTML = HELP_TEXT[key] || "";
+  popup.innerHTML = `<button class="info-popup-close" aria-label="Close">×</button>` + (HELP_TEXT[key] || "");
   document.body.appendChild(popup);
   currentInfoPopup = popup;
+
+  // Wire up the close button
+  popup.querySelector(".info-popup-close").addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    closeInfoPopup();
+  });
 
   // Position: try below the anchor, flipping above if it would overflow.
   // Clamp horizontally to viewport with a margin.
