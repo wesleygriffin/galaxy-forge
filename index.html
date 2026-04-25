@@ -265,6 +265,11 @@
   .collapsible-body {
     padding-top: 4px;
   }
+  .toggle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+  }
   .ctrl-label {
     display: block;
     font-size: 10px;
@@ -701,29 +706,33 @@
         </div>
       </div>
 
-      <div class="ctrl-group">
+      <div class="ctrl-group full-width">
         <details class="collapsible">
           <summary>
             <span class="collapsible-label">Placement Options</span>
           </summary>
           <div class="collapsible-body">
-            <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
-            <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
+            <div class="toggle-grid">
+              <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
+              <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
+            </div>
             <button class="info-link" data-info="placement-options">About these options <span>ⓘ</span></button>
           </div>
         </details>
       </div>
 
-      <div class="ctrl-group">
+      <div class="ctrl-group full-width">
         <details class="collapsible">
           <summary>
             <span class="collapsible-label">Expansions</span>
             <span class="collapsible-hint" id="expansions-hint"></span>
           </summary>
           <div class="collapsible-body">
-            <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
-            <div class="toggle-row on" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
-            <div class="toggle-row on" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
+            <div class="toggle-grid">
+              <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
+              <div class="toggle-row on" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
+              <div class="toggle-row on" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
+            </div>
           </div>
         </details>
       </div>
