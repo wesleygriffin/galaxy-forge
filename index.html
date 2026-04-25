@@ -939,7 +939,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.10";
+const APP_VERSION = "0.1.11";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -3145,7 +3145,10 @@ svg.addEventListener("contextmenu", e => e.preventDefault());
 (function setupSidebarResize() {
   const handle = document.getElementById("sidebar-resize");
   if (!handle) return;
-  const MIN_WIDTH = 200;
+  // 224 is the minimum width at which 'Clear Locks & Filters' fits on a
+  // single line — the button is the longest fixed-width element in the
+  // settings footer, so it sets the floor for the sidebar.
+  const MIN_WIDTH = 224;
   const MAX_WIDTH = 600;
   const STORAGE_KEY = "galaxy-forge.sidebar-width";
 
