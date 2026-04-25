@@ -555,7 +555,6 @@
   .menu-action.active.locked { background: rgba(77,179,199,0.2); border-color: var(--cyan); color: var(--cyan); }
   .menu-action.active.include { background: rgba(90,154,78,0.2); border-color: var(--green); color: var(--green); }
   .menu-action.active.exclude { background: rgba(200,68,42,0.2); border-color: var(--red); color: var(--red); }
-  .menu-action.swap { grid-column: span 2; }
   #unused-drawer {
     position: absolute; bottom: 0; left: 0; right: 0;
     max-height: 45%;
@@ -1788,16 +1787,17 @@ function showTileMenu(key, tileId, cx, cy) {
     ${planetsHtml}${anomaliesHtml}${whHtml}
     <div class="menu-actions">
       <button class="menu-action locked ${isLocked ? 'active' : ''}" data-act="lock">
-        🔒 ${isLocked ? 'Locked' : 'Lock'}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z"/><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"/><path d="M8 11v-4a4 4 0 1 1 8 0v4"/></svg>
+        ${isLocked ? 'Locked' : 'Lock'}
       </button>
       <button class="menu-action include ${isIncluded ? 'active' : ''}" data-act="include">
         ✓ ${isIncluded ? 'Always' : 'Always Include'}
       </button>
+      <button class="menu-action swap" data-act="swap">
+        ⇄ Swap
+      </button>
       <button class="menu-action exclude ${isExcluded ? 'active' : ''}" data-act="exclude">
         ✕ ${isExcluded ? 'Never' : 'Never Include'}
-      </button>
-      <button class="menu-action swap" data-act="swap">
-        ⇄ Swap with unused tile
       </button>
     </div>
   `;
