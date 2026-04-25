@@ -1177,6 +1177,16 @@ const HEX_SIZE = 54; // radius
 const HEX_W = Math.sqrt(3) * HEX_SIZE;
 const HEX_H = 2 * HEX_SIZE;
 
+// Tile IDs we have a mirrored image for (in /tiles/{id}.webp). Pulled from
+// KeeganW/ti4 (Base + PoK, IDs 0-82). Stored as a Set for O(1) lookup.
+const TILE_IMAGE_IDS = new Set();
+for (let i = 0; i <= 82; i++) TILE_IMAGE_IDS.add(i);
+
+// Source tile dimensions — the WebP files are 364×315 (a few are 364×344 for
+// special tiles). We render them centered into the hex bounding box.
+const TILE_IMG_W = 364;
+const TILE_IMG_H = 315;
+
 function hexKey(q, r) { return `${q},${r}`; }
 function parseKey(k) { const [q,r] = k.split(",").map(Number); return [q,r]; }
 
@@ -1499,6 +1509,15 @@ function render() {
   const g = svgEl("g", { id: "board-g", transform: `scale(${state.viewTransform.scale}) translate(${state.viewTransform.x} ${state.viewTransform.y})` });
   svg.appendChild(g);
 
+  // Reusable hex clip path for tile images. Defined once at the SVG root
+  // and referenced by every <image> via clip-path="url(#hex-clip)".
+  const defs = svgEl("defs");
+  const clip = svgEl("clipPath", { id: "hex-clip", clipPathUnits: "userSpaceOnUse" });
+  const clipPoly = svgEl("polygon", { points: hexPoints(0, 0, HEX_SIZE - 1) });
+  clip.appendChild(clipPoly);
+  defs.appendChild(clip);
+  svg.appendChild(defs);
+
   for (const [q, r] of layout.coords) {
     const key = hexKey(q, r);
     const tileId = state.map.get(key);
@@ -1526,8 +1545,26 @@ function renderHex(parent, q, r, key, tileId) {
   });
   group.appendChild(bg);
 
-  // Inner details based on tile type
-  if (sys) {
+  // Inner details: prefer the mirrored tile image when we have one;
+  // otherwise fall back to the SVG-drawn content (TE tiles, missing Codex).
+  if (sys && tileId != null && TILE_IMAGE_IDS.has(Number(tileId))) {
+    // Scale the image so its width matches the hex's flat-to-flat width;
+    // the slight vertical bleed is hidden by the hex clip path.
+    const imgW = HEX_W;
+    const imgH = imgW * (TILE_IMG_H / TILE_IMG_W);
+    const tileImg = svgEl("image", {
+      x: -imgW / 2,
+      y: -imgH / 2,
+      width: imgW,
+      height: imgH,
+      href: `tiles/${tileId}.webp`,
+      "clip-path": "url(#hex-clip)",
+      preserveAspectRatio: "xMidYMid slice",
+    });
+    // Fallback for older browsers that don't honor href on SVG <image>
+    tileImg.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", `tiles/${tileId}.webp`);
+    group.appendChild(tileImg);
+  } else if (sys) {
     renderTileContent(group, sys, tileId);
   } else {
     // Empty position marker
