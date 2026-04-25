@@ -1548,9 +1548,10 @@ function renderHex(parent, q, r, key, tileId) {
   // Inner details: prefer the mirrored tile image when we have one;
   // otherwise fall back to the SVG-drawn content (TE tiles, missing Codex).
   if (sys && tileId != null && TILE_IMAGE_IDS.has(Number(tileId))) {
-    // Scale the image so its width matches the hex's flat-to-flat width;
-    // the slight vertical bleed is hidden by the hex clip path.
-    const imgW = HEX_W;
+    // Source images are flat-top oriented; our hex grid is pointy-top, so
+    // rotate by 30° to align them. After rotation the image must still cover
+    // the hex's bounding box (point-to-point = HEX_H), so size from that.
+    const imgW = HEX_H;
     const imgH = imgW * (TILE_IMG_H / TILE_IMG_W);
     const tileImg = svgEl("image", {
       x: -imgW / 2,
@@ -1560,6 +1561,7 @@ function renderHex(parent, q, r, key, tileId) {
       href: `tiles/${tileId}.webp`,
       "clip-path": "url(#hex-clip)",
       preserveAspectRatio: "xMidYMid slice",
+      transform: "rotate(30)",
     });
     // Fallback for older browsers that don't honor href on SVG <image>
     tileImg.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", `tiles/${tileId}.webp`);
