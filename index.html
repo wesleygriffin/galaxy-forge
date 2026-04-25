@@ -528,6 +528,14 @@
     position: absolute; top: 14px; right: 14px;
     display: flex; flex-direction: column; gap: 6px; z-index: 10;
   }
+  /* Help button: top-left of the map view on desktop. Hidden on mobile via the
+     mobile breakpoint — mobile uses #sidebar-help-btn in the top bar instead. */
+  #board-help-btn {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 10;
+  }
   .tool-btn {
     width: 40px; height: 40px;
     background: rgba(14, 20, 28, 0.85);
@@ -848,6 +856,13 @@
       </div>
 
       <div class="ctrl-group">
+        <label class="ctrl-label">Behavior</label>
+        <div class="toggle-grid">
+          <div class="toggle-row on" data-toggle="auto-refresh"><div class="toggle-track"></div><div class="toggle-label">Auto-refresh<span class="toggle-sub">Re-forge map on option change</span></div></div>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
         <label class="ctrl-label">Placement Options<button class="info-icon" data-info="placement-options" aria-label="About placement options">ⓘ</button></label>
         <div class="toggle-grid">
           <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
@@ -887,8 +902,8 @@
       <button class="tool-btn" id="mobile-share-btn" title="Copy share link" aria-label="Copy share link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
       <button class="tool-btn" id="mobile-export-btn" title="Export JSON" aria-label="Export JSON"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
     </div>
+    <button class="tool-btn" id="board-help-btn" title="Help" aria-label="Help">?</button>
     <div class="board-tools">
-      <button class="tool-btn" id="board-help-btn" title="Help" aria-label="Help">?</button>
       <button class="tool-btn tool-btn-primary" id="tool-forge" title="Forge new galaxy (keeps locks)" aria-label="Forge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385"/><path d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0"/></svg></button>
       <button class="tool-btn" id="tool-numbers" title="Toggle tile number overlay">#</button>
       <button class="tool-btn" id="tool-unused" title="Show unused tiles">⊞</button>
@@ -925,7 +940,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.1";
+const APP_VERSION = "0.1.2";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -1286,6 +1301,7 @@ const state = {
   customWeights: { res: 1.0, inf: 1.0, pc: 0.5, tech: 1.0, legend: 2.0, anomaly: -1.0 },
   shufflePriority: false,
   reversePlacement: false,
+  autoRefresh: true,        // re-forge map automatically when an option changes
   respectLocks: true,       // when false, generation ignores state.locked (but doesn't clear it)
   map: new Map(),           // key "q,r" => tileId
   locked: new Set(),        // keys of locked positions
@@ -2645,6 +2661,8 @@ function syncUIFromState() {
       el.classList.toggle("on", state.shufflePriority);
     } else if (key === "reverse-placement") {
       el.classList.toggle("on", state.reversePlacement);
+    } else if (key === "auto-refresh") {
+      el.classList.toggle("on", state.autoRefresh);
     }
   });
   // Selects
@@ -2668,12 +2686,13 @@ function syncUIFromState() {
 
 /* Re-forge the map whenever an option is changed, so every option behaves
    consistently — change a setting, see the board update. We only auto-forge
-   if the user has already forged at least once (state.map has tiles beyond
-   Mecatol at 0,0), preserving the "Galaxy awaiting forge" landing state and
-   the explicit Forge interaction on first run. Locks are honored by
+   if (a) the user has the auto-refresh toggle on, and (b) they've already
+   forged at least once (state.map has tiles beyond Mecatol at 0,0). The
+   second guard preserves the "Galaxy awaiting forge" landing state and
+   keeps the explicit Forge interaction on first run. Locks are honored by
    generateMap, so pinned tiles survive. */
 function applyOptionChange() {
-  if (state.map.size > 1) generateMap();
+  if (state.autoRefresh && state.map.size > 1) generateMap();
 }
 
 // Player count
@@ -2693,6 +2712,12 @@ document.querySelectorAll("[data-toggle]").forEach(el => {
       state.shufflePriority = !state.shufflePriority;
     } else if (key === "reverse-placement") {
       state.reversePlacement = !state.reversePlacement;
+    } else if (key === "auto-refresh") {
+      state.autoRefresh = !state.autoRefresh;
+      // Persist as a UI preference — survives page reloads, isn't part of
+      // share state (it describes how *this user* drives the panel, not
+      // what the shared galaxy looks like).
+      try { localStorage.setItem("galaxy-forge.auto-refresh", String(state.autoRefresh)); } catch (_) {}
     }
     syncUIFromState();
     applyOptionChange();
@@ -3121,15 +3146,18 @@ svg.addEventListener("contextmenu", e => e.preventDefault());
 (function setupSidebarResize() {
   const handle = document.getElementById("sidebar-resize");
   if (!handle) return;
-  const MIN_WIDTH = 200;
+  const MIN_WIDTH = 240;
   const MAX_WIDTH = 600;
   const STORAGE_KEY = "galaxy-forge.sidebar-width";
 
-  // Restore saved width on load.
+  // Restore saved width on load. Clamp to the current [MIN, MAX] range so
+  // that bumping MIN_WIDTH later doesn't snap users back to the CSS default
+  // — narrow-sidebar lovers keep their preference at the new minimum.
   try {
     const saved = parseInt(localStorage.getItem(STORAGE_KEY) || "", 10);
-    if (Number.isFinite(saved) && saved >= MIN_WIDTH && saved <= MAX_WIDTH) {
-      document.documentElement.style.setProperty("--sidebar-width", saved + "px");
+    if (Number.isFinite(saved)) {
+      const clamped = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, saved));
+      document.documentElement.style.setProperty("--sidebar-width", clamped + "px");
     }
   } catch (_) { /* localStorage may be unavailable in private mode */ }
 
@@ -3208,6 +3236,13 @@ svg.addEventListener("contextmenu", e => e.preventDefault());
 ============================================================================= */
 
 function init() {
+  // Restore persisted UI preferences before the first sync so the toggle
+  // reflects the correct state on render.
+  try {
+    const saved = localStorage.getItem("galaxy-forge.auto-refresh");
+    if (saved === "true" || saved === "false") state.autoRefresh = saved === "true";
+  } catch (_) { /* localStorage unavailable */ }
+
   syncUIFromState();
   // Try loading from URL
   const params = new URLSearchParams(location.search);
