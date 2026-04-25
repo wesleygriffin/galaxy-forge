@@ -71,30 +71,31 @@
   }
 
   @media (max-width: 820px) {
-    #app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    #app { grid-template-columns: 1fr; grid-template-rows: 56px 1fr; }
     #sidebar {
-      max-height: none;
-      height: auto;
-      min-height: 0;
-      padding: 10px 14px;
+      max-height: 56px;
+      height: 56px;
+      min-height: 56px;
+      box-sizing: border-box;
+      padding: 0 14px;
       display: flex;
       align-items: center;
       gap: 10px;
       border-bottom: 1px solid var(--border);
-      overflow: visible;
+      overflow: hidden;
     }
+    #sidebar > *:not(.brand-title):not(#sidebar-help-btn) { display: none; }
     #sidebar .brand-title {
       font-size: 15px;
       letter-spacing: 0.2em;
       flex: 1;
       margin: 0;
-      order: 1;  /* title first, button second */
+      order: 1;
     }
-    #sidebar .brand-rule { display: none; }
     #sidebar-help-btn {
       position: static;
       flex-shrink: 0;
-      order: 2;  /* help button appears after title (right side) */
+      order: 2;
       background: var(--bg-deep);
       border: 1px solid var(--border-strong);
       color: var(--amber);
