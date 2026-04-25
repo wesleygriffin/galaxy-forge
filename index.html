@@ -925,7 +925,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.0";
+const APP_VERSION = "0.1.1";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2666,10 +2666,21 @@ function syncUIFromState() {
    EVENT WIRING
 ============================================================================= */
 
+/* Re-forge the map whenever an option is changed, so every option behaves
+   consistently — change a setting, see the board update. We only auto-forge
+   if the user has already forged at least once (state.map has tiles beyond
+   Mecatol at 0,0), preserving the "Galaxy awaiting forge" landing state and
+   the explicit Forge interaction on first run. Locks are honored by
+   generateMap, so pinned tiles survive. */
+function applyOptionChange() {
+  if (state.map.size > 1) generateMap();
+}
+
 // Player count
 document.getElementById("player-count").onchange = (e) => {
   state.playerCount = Number(e.target.value);
   updateBoardStyleAvailability();
+  applyOptionChange();
 };
 
 // Toggles
@@ -2684,18 +2695,29 @@ document.querySelectorAll("[data-toggle]").forEach(el => {
       state.reversePlacement = !state.reversePlacement;
     }
     syncUIFromState();
+    applyOptionChange();
   });
 });
 
-document.getElementById("board-style").onchange = (e) => { state.boardStyle = e.target.value; };
-document.getElementById("placement-style").onchange = (e) => { state.placementStyle = e.target.value; };
+document.getElementById("board-style").onchange = (e) => {
+  state.boardStyle = e.target.value;
+  applyOptionChange();
+};
+document.getElementById("placement-style").onchange = (e) => {
+  state.placementStyle = e.target.value;
+  applyOptionChange();
+};
 document.getElementById("weighting").onchange = (e) => {
   state.weighting = e.target.value;
   document.getElementById("custom-weights-group").style.display = state.weighting === "custom" ? "block" : "none";
+  applyOptionChange();
 };
 
 ["res","inf","pc","tech","legend","anomaly"].forEach(k => {
-  document.getElementById("w-" + k).onchange = (e) => { state.customWeights[k] = parseFloat(e.target.value) || 0; };
+  document.getElementById("w-" + k).onchange = (e) => {
+    state.customWeights[k] = parseFloat(e.target.value) || 0;
+    applyOptionChange();
+  };
 });
 
 // Clear locks and filters
