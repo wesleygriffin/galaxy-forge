@@ -595,7 +595,6 @@
   <aside id="sidebar">
     <button id="sidebar-help-btn" title="Help" aria-label="Help">?</button>
     <div class="brand-title">Galaxy Forge</div>
-    <div class="brand-sub">TI4 · PoK · TE · Codex</div>
     <div class="brand-rule"></div>
 
     <div id="settings-sheet">
@@ -712,7 +711,6 @@
     <svg id="board-viewport" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="board-status" id="board-status">
       Galaxy awaiting forge. Press <strong style="color:var(--amber);">Forge Galaxy</strong> to begin.
-      <div class="confidence-note">Base + PoK tile data is verified. Thunder's Edge tiles (Fracture, expedition systems) are included structurally — verify against your TE rulebook before tournament play.</div>
     </div>
     <div id="tile-menu"></div>
     <div id="unused-drawer">
@@ -1681,8 +1679,7 @@ function updateStatus() {
   status.innerHTML = `<strong style="color:var(--amber-bright);">${state.playerCount}p · ${state.boardStyle}</strong> · ${tileCount} tiles placed` +
     (lockedCount ? ` · <span style="color:var(--cyan);">${lockedCount} locked</span>` : "") +
     (included ? ` · <span style="color:var(--green);">${included} included</span>` : "") +
-    (excluded ? ` · <span style="color:var(--red);">${excluded} excluded</span>` : "") +
-    `<div class="confidence-note">TE tile data is structural — verify against your rulebook.</div>`;
+    (excluded ? ` · <span style="color:var(--red);">${excluded} excluded</span>` : "");
 }
 
 /* =============================================================================
