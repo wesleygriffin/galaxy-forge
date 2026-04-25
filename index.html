@@ -616,6 +616,23 @@
   }
   .weight-row label { color: var(--text-dim); }
   .weight-row input { width: 60px; padding: 3px 6px; font-size: 11px; }
+
+  /* ──────────────────────────────────────────────────────────────────
+     Mobile overrides at end-of-stylesheet to win source-order battles.
+     The base #sidebar rule (padding: 18px 18px 80px 18px, border-right,
+     overflow-y: auto) is desktop-oriented and appears later in the
+     source than the @media (max-width: 820px) block above. With equal
+     specificity, "later wins", so we re-declare the mobile-critical
+     overrides here so they actually take effect.
+     ────────────────────────────────────────────────────────────────── */
+  @media (max-width: 820px) {
+    #sidebar {
+      padding: 10px 14px;
+      border-right: none;
+      overflow: hidden;
+      transition: none;
+    }
+  }
 </style>
 </head>
 <body>
