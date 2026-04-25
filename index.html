@@ -2519,6 +2519,22 @@ function openShareModal() {
    UI SYNC
 ============================================================================= */
 
+function updateBoardStyleAvailability() {
+  // "Large Galaxy" layout is only defined for 6 players ("6-large" in LAYOUTS).
+  // Disable the option for any other player count, and revert to "standard" if it
+  // was selected when the player count changes.
+  const select = document.getElementById("board-style");
+  const largeOption = select.querySelector('option[value="large"]');
+  if (!largeOption) return;
+  const allowLarge = state.playerCount === 6;
+  largeOption.disabled = !allowLarge;
+  largeOption.textContent = allowLarge ? "Large Galaxy" : "Large Galaxy (6 players only)";
+  if (!allowLarge && state.boardStyle === "large") {
+    state.boardStyle = "standard";
+    select.value = "standard";
+  }
+}
+
 function syncUIFromState() {
   // Player count
   document.getElementById("player-count").value = String(state.playerCount);
@@ -2545,6 +2561,7 @@ function syncUIFromState() {
   document.getElementById("w-tech").value = state.customWeights.tech;
   document.getElementById("w-legend").value = state.customWeights.legend;
   document.getElementById("w-anomaly").value = state.customWeights.anomaly;
+  updateBoardStyleAvailability();
 }
 
 /* =============================================================================
@@ -2554,6 +2571,7 @@ function syncUIFromState() {
 // Player count
 document.getElementById("player-count").onchange = (e) => {
   state.playerCount = Number(e.target.value);
+  updateBoardStyleAvailability();
 };
 
 // Toggles
