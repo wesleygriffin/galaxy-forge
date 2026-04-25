@@ -166,6 +166,7 @@
     .board-tools-left { display: flex; }
     #sidebar-share-group { display: none; } /* buttons moved to map tools on mobile */
     #sidebar-resize { display: none; } /* sidebar isn't a side panel on mobile */
+    #sidebar-toggle { display: none; } /* collapse is meaningless on mobile */
     #board-help-btn { display: none; } /* help button is in the sidebar bar on mobile */
   }
   @media (min-width: 821px) {
@@ -207,46 +208,13 @@
   #sidebar-resize.active::after { background: var(--amber); }
   #sidebar-resize.active { background: rgba(212, 160, 86, 0.08); }
 
-  /* The collapse/expand toggle and the collapsed state are desktop-only.
-     Hide the button by default; the @media (min-width: 821px) block below
-     re-enables it (display: flex) on desktop. The desktop rule wins there
-     because it comes later in source order with the same specificity.
-     This also guards against a previously-persisted collapsed state from
-     desktop accidentally hiding the mobile top bar (which is also #sidebar)
-     since all the html.sidebar-collapsed rules live inside the desktop-only
-     media query. */
-  #sidebar-toggle { display: none; }
-
+  /* The collapse/expand toggle lives at the bottom of the right toolbar
+     (#tool-unused's neighbor) and just inherits .tool-btn styling. Hide it
+     on mobile since collapse is meaningless there — mobile uses a top-bar
+     layout where the sidebar is the bar. The html.sidebar-collapsed rules
+     stay desktop-only too: a previously-persisted collapsed state from
+     desktop must not accidentally hide the mobile top bar. */
   @media (min-width: 821px) {
-    /* Collapse/expand toggle that straddles the sidebar/main boundary. Stays
-       visible when the sidebar is collapsed so the user can expand it again. */
-    #sidebar-toggle {
-      position: fixed;
-      top: 14px;
-      left: var(--sidebar-width);
-      transform: translateX(-50%);
-      width: 22px;
-      height: 32px;
-      background: rgba(14, 20, 28, 0.85);
-      border: 1px solid var(--border-strong);
-      border-radius: 2px;
-      color: var(--amber);
-      cursor: pointer;
-      z-index: 51; /* above #sidebar-resize (50) so it's clickable on the boundary */
-      font-size: 11px;
-      font-family: inherit;
-      line-height: 1;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(4px);
-    }
-    #sidebar-toggle:hover {
-      border-color: var(--amber);
-      color: var(--amber-bright);
-    }
-
     /* Collapsed state — sidebar hidden, map area takes the full width.
        Overrides #app's grid template so the sidebar column is 0 regardless of
        the inline-set --sidebar-width (which is preserved for when we expand).
@@ -254,17 +222,10 @@
        rule below) — without that, display:none on #sidebar removes it from
        the grid and grid auto-flow places #board-area into column 1, which
        is the 0px-wide track. The whole map area would then collapse to 0
-       and only the position:fixed toggle would remain visible. */
+       and only the toolbar (with the toggle) would remain visible. */
     html.sidebar-collapsed #app { grid-template-columns: 0 1fr; }
     html.sidebar-collapsed #sidebar { display: none; }
     html.sidebar-collapsed #sidebar-resize { display: none; }
-    html.sidebar-collapsed #sidebar-toggle {
-      left: 0;
-      transform: translateX(0);
-      border-left: none;
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-    }
   }
   #board-area { position: relative; overflow: hidden; grid-column: 2; }
   #board-viewport {
@@ -910,7 +871,6 @@
   </aside>
 
   <div id="sidebar-resize" role="separator" aria-orientation="vertical" aria-label="Resize sidebar"></div>
-  <button id="sidebar-toggle" type="button" title="Collapse sidebar" aria-label="Collapse sidebar">◀</button>
 
   <main id="board-area">
     <div class="board-tools-left">
@@ -923,6 +883,7 @@
       <button class="tool-btn tool-btn-primary" id="tool-forge" title="Forge new galaxy (keeps locks)" aria-label="Forge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385"/><path d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0"/></svg></button>
       <button class="tool-btn" id="tool-numbers" title="Toggle tile number overlay">#</button>
       <button class="tool-btn" id="tool-unused" title="Show unused tiles">⊞</button>
+      <button class="tool-btn" id="sidebar-toggle" type="button" title="Collapse sidebar" aria-label="Collapse sidebar">◀</button>
     </div>
     <svg id="board-viewport" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="board-status" id="board-status">
@@ -956,7 +917,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.5";
+const APP_VERSION = "0.1.6";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
