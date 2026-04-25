@@ -2514,7 +2514,8 @@ const HELP_TEXT = {
     <p><strong>Tip:</strong> Tap any tile for controls. Long-press + drag to swap tiles. Use ⊞ to see unused tiles.</p>
     <p>Pan by dragging. Pinch to zoom. Double-tap to reset the view.</p>
     <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> opens settings. ↻ forges a new galaxy (keeps locked tiles). Clear Locks &amp; Filters (in settings) wipes locks and include/exclude filters.</p>
-    <p style="color: var(--copper); font-size: 11px; margin-top: 10px;">Base + PoK tile data is verified. Thunder's Edge tiles (Fracture, expedition systems) are included structurally — verify against your TE rulebook before tournament play.</p>`,
+    <p style="color: var(--copper); font-size: 11px; margin-top: 10px;">Base + PoK tile data is verified. Thunder's Edge tiles (Fracture, expedition systems) are included structurally — verify against your TE rulebook before tournament play.</p>
+    <p style="margin-top: 12px;"><button class="info-link" id="export-systems-btn">Export all hex data (JSON) <span>⬇</span></button></p>`,
 
   "board-style": `<h4>Board Style</h4>
     <p>Changes how the tiles are actually laid out on a newly generated map.</p>
@@ -2630,6 +2631,84 @@ function exportJSON() {
 }
 document.getElementById("export-btn").onclick = exportJSON;
 document.getElementById("mobile-export-btn").onclick = exportJSON;
+
+/* =============================================================================
+   SYSTEM DATA EXPORT
+   Normalizes every entry in SYSTEMS into a uniform shape so consumers don't
+   have to handle missing fields. Useful as a debugging dump or to feed
+   another tool that needs the full hex catalog.
+============================================================================= */
+
+function normalizePlanet(p) {
+  return {
+    name: p.name ?? null,
+    res: p.res ?? 0,
+    inf: p.inf ?? 0,
+    trait: p.trait ?? null,             // 'cultural' | 'industrial' | 'hazardous' | null
+    tech: p.tech ?? null,               // 'biotic' | 'cybernetic' | 'propulsion' | 'warfare' | null
+    legendary: p.legendary === true,
+    planetType: p.planetType ?? null,   // optional special types (e.g. 'faction-tech')
+  };
+}
+
+function normalizeSystem(id, sys) {
+  return {
+    id: Number(id),
+    name: sys.name ?? null,
+    expansion: sys.expansion ?? null,   // 'base' | 'pok' | 'codex' | 'te'
+    type: sys.type ?? "system",         // 'mecatol' | 'home' | 'system' | 'hyperlane' | 'fracture' | etc
+    back: sys.back ?? null,             // 'blue' | 'red' | 'green' | 'special' | null
+    faction: sys.faction ?? null,       // home systems only
+    planets: Array.isArray(sys.planets) ? sys.planets.map(normalizePlanet) : [],
+    anomalies: Array.isArray(sys.anomalies) ? [...sys.anomalies] : [],
+    wormholes: Array.isArray(sys.wormholes) ? [...sys.wormholes] : [],
+    hyperlane: sys.hyperlane ?? null,   // hyperlane connection data, if any
+    notes: sys.notes ?? null,
+  };
+}
+
+function exportAllSystems() {
+  const normalized = Object.entries(SYSTEMS)
+    .map(([id, sys]) => normalizeSystem(id, sys))
+    .sort((a, b) => a.id - b.id);
+
+  const payload = {
+    generatedAt: new Date().toISOString(),
+    count: normalized.length,
+    schema: {
+      id: "number — tile/system ID",
+      name: "string|null",
+      expansion: "'base'|'pok'|'codex'|'te'",
+      type: "'mecatol'|'home'|'system'|'hyperlane'|'fracture'|...",
+      back: "'blue'|'red'|'green'|'special'|null",
+      faction: "string|null — home systems only",
+      planets: "Array<{name,res,inf,trait,tech,legendary,planetType}>",
+      anomalies: "Array<'supernova'|'asteroid-field'|'nebula'|'gravity-rift'>",
+      wormholes: "Array<'alpha'|'beta'|'gamma'|'delta'>",
+      hyperlane: "object|null",
+      notes: "string|null",
+    },
+    systems: normalized,
+  };
+
+  const data = JSON.stringify(payload, null, 2);
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `galaxy-forge-systems-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Delegated click for the export button inside the dynamically-rendered help popup
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#export-systems-btn")) {
+    e.preventDefault();
+    e.stopPropagation();
+    exportAllSystems();
+  }
+});
 
 // Click outside menu to close
 document.addEventListener("click", (e) => {
