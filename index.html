@@ -707,34 +707,20 @@
       </div>
 
       <div class="ctrl-group full-width">
-        <details class="collapsible">
-          <summary>
-            <span class="collapsible-label">Placement Options</span>
-          </summary>
-          <div class="collapsible-body">
-            <div class="toggle-grid">
-              <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
-              <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
-            </div>
-            <button class="info-link" data-info="placement-options">About these options <span>ⓘ</span></button>
-          </div>
-        </details>
+        <label class="ctrl-label">Placement Options<button class="info-icon" data-info="placement-options" aria-label="About placement options">ⓘ</button></label>
+        <div class="toggle-grid">
+          <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
+          <div class="toggle-row" data-toggle="reverse-placement"><div class="toggle-track"></div><div class="toggle-label">Reverse Placement<span class="toggle-sub">Late picks go first</span></div></div>
+        </div>
       </div>
 
       <div class="ctrl-group full-width">
-        <details class="collapsible">
-          <summary>
-            <span class="collapsible-label">Expansions</span>
-            <span class="collapsible-hint" id="expansions-hint"></span>
-          </summary>
-          <div class="collapsible-body">
-            <div class="toggle-grid">
-              <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
-              <div class="toggle-row on" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
-              <div class="toggle-row on" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
-            </div>
-          </div>
-        </details>
+        <label class="ctrl-label">Expansions</label>
+        <div class="toggle-grid">
+          <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
+          <div class="toggle-row on" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
+          <div class="toggle-row on" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
+        </div>
       </div>
     </div>
     <div class="settings-footer">
@@ -2424,15 +2410,6 @@ function syncUIFromState() {
       el.classList.toggle("on", state.reversePlacement);
     }
   });
-  // Expansions summary hint
-  const expHint = document.getElementById("expansions-hint");
-  if (expHint) {
-    const active = [];
-    if (state.expansions.pok) active.push("PoK");
-    if (state.expansions.codex) active.push("Codex");
-    if (state.expansions.te) active.push("TE");
-    expHint.textContent = active.length ? active.join(" · ") : "Base only";
-  }
   // Selects
   document.getElementById("board-style").value = state.boardStyle;
   document.getElementById("placement-style").value = state.placementStyle;
