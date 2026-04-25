@@ -2554,7 +2554,10 @@ const HELP_TEXT = {
     <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">#</span> toggles the tile-number overlay. Useful for cross-referencing system IDs against the rulebook or comparing setups by tile composition.</p>
     <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">⊞</span> opens the unused-tile drawer. See every tile not currently on the board, drag any of them onto a hex to swap it in, or use them to build a custom layout from scratch.</p>
     <p style="color: var(--copper); font-size: 11px; margin-top: 10px;">Base + PoK tile data is verified. Thunder's Edge tiles (Fracture, expedition systems) are included structurally — verify against your TE rulebook before tournament play.</p>
-    <p style="margin-top: 12px;"><button class="info-link" id="export-systems-btn">Export all hex data (JSON) <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button></p>`,
+    <p style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+      <button class="info-link" id="export-png-btn">Download map as PNG (high-res) <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+      <button class="info-link" id="export-systems-btn">Export all hex data (JSON) <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+    </p>`,
 
   "board-style": `<h4>Board Style</h4>
     <p>Changes how the tiles are actually laid out on a newly generated map.</p>
@@ -2754,7 +2757,113 @@ document.addEventListener("click", (e) => {
     e.stopPropagation();
     exportAllSystems();
   }
+  if (e.target.closest("#export-png-btn")) {
+    e.preventDefault();
+    e.stopPropagation();
+    exportMapPNG();
+  }
 });
+
+/* =============================================================================
+   HIGH-RES MAP RENDER (PNG)
+   Snapshot the board SVG, neutralize pan/zoom, inline computed styles so CSS
+   classes survive serialization, then rasterize to a canvas at 3x DPI.
+============================================================================= */
+
+// Walk a tree and copy each element's computed styles inline. Required because
+// the SVG references CSS classes (.hex-bg, .planet-text, etc.) that won't
+// resolve once the SVG is serialized into a data URL and loaded into <img>.
+function inlineComputedStyles(srcRoot, destRoot) {
+  // List of style properties to inline. Limiting to visual props keeps the
+  // output reasonable (full computed styles add ~300 props × N nodes = huge).
+  const PROPS = [
+    "fill", "stroke", "stroke-width", "stroke-opacity", "stroke-linecap",
+    "stroke-linejoin", "stroke-dasharray", "fill-opacity", "opacity",
+    "font-family", "font-size", "font-weight", "font-style",
+    "text-anchor", "dominant-baseline", "letter-spacing",
+    "color", "display", "visibility",
+  ];
+  const srcAll = [srcRoot, ...srcRoot.querySelectorAll("*")];
+  const dstAll = [destRoot, ...destRoot.querySelectorAll("*")];
+  for (let i = 0; i < srcAll.length; i++) {
+    const cs = window.getComputedStyle(srcAll[i]);
+    let inline = "";
+    for (const prop of PROPS) {
+      const v = cs.getPropertyValue(prop);
+      if (v) inline += `${prop}:${v};`;
+    }
+    if (inline) dstAll[i].setAttribute("style", inline);
+  }
+}
+
+async function exportMapPNG() {
+  if (!state.map.size) {
+    alert("Forge a galaxy first, then download.");
+    return;
+  }
+
+  const SCALE = 3;          // 3x DPI — looks crisp on retina + good for print
+  const BG = "#0a0e14";     // matches --bg-deep so transparent regions don't pop white
+
+  // Clone the live SVG so we don't disturb the on-screen board
+  const srcSvg = document.getElementById("board-viewport");
+  const clone = srcSvg.cloneNode(true);
+
+  // Strip the user pan/zoom transform — we want the full board, centered
+  const innerG = clone.querySelector("#board-g");
+  if (innerG) innerG.removeAttribute("transform");
+
+  // Compute output size from the SVG's viewBox so the aspect ratio is exact
+  const vb = (clone.getAttribute("viewBox") || "0 0 1000 1000").split(/\s+/).map(Number);
+  const [, , vbW, vbH] = vb;
+  clone.setAttribute("width", vbW);
+  clone.setAttribute("height", vbH);
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+
+  // Inline computed styles so CSS classes survive serialization
+  inlineComputedStyles(srcSvg, clone);
+
+  // Wrap in a temporary off-screen container so layout is stable
+  const xml = new XMLSerializer().serializeToString(clone);
+  const svgBlob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  try {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    await new Promise((res, rej) => {
+      img.onload = res;
+      img.onerror = (e) => rej(new Error("SVG image failed to load: " + e));
+      img.src = url;
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(vbW * SCALE);
+    canvas.height = Math.round(vbH * SCALE);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        alert("Failed to generate PNG.");
+        return;
+      }
+      const dlUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = dlUrl;
+      a.download = `galaxy-${state.playerCount}p-${Date.now()}.png`;
+      a.click();
+      URL.revokeObjectURL(dlUrl);
+    }, "image/png");
+  } catch (err) {
+    console.error(err);
+    alert("Map render failed: " + err.message);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
 
 // Click outside menu to close
 document.addEventListener("click", (e) => {
