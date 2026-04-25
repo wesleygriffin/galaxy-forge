@@ -858,7 +858,7 @@
       <div class="ctrl-group">
         <label class="ctrl-label">Behavior</label>
         <div class="toggle-grid">
-          <div class="toggle-row on" data-toggle="auto-refresh"><div class="toggle-track"></div><div class="toggle-label">Auto-refresh<span class="toggle-sub">Re-forge map on option change</span></div></div>
+          <div class="toggle-row" data-toggle="auto-refresh"><div class="toggle-track"></div><div class="toggle-label">Auto-refresh</div></div>
         </div>
       </div>
 
@@ -939,7 +939,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.8";
+const APP_VERSION = "0.1.9";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -1300,7 +1300,7 @@ const state = {
   customWeights: { res: 1.0, inf: 1.0, pc: 0.5, tech: 1.0, legend: 2.0, anomaly: -1.0 },
   shufflePriority: false,
   reversePlacement: false,
-  autoRefresh: true,        // re-forge map automatically when an option changes
+  autoRefresh: false,       // re-forge map automatically when an option changes
   respectLocks: true,       // when false, generation ignores state.locked (but doesn't clear it)
   map: new Map(),           // key "q,r" => tileId
   locked: new Set(),        // keys of locked positions
@@ -3145,7 +3145,7 @@ svg.addEventListener("contextmenu", e => e.preventDefault());
 (function setupSidebarResize() {
   const handle = document.getElementById("sidebar-resize");
   if (!handle) return;
-  const MIN_WIDTH = 240;
+  const MIN_WIDTH = 228;
   const MAX_WIDTH = 600;
   const STORAGE_KEY = "galaxy-forge.sidebar-width";
 
