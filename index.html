@@ -622,6 +622,30 @@
   .hex-wrapper { cursor: pointer; transition: filter 0.1s; }
   .hex-wrapper:hover { filter: brightness(1.2); }
   .hex-wrapper.drag-over .hex-bg { stroke: var(--amber-bright); stroke-width: 4 !important; }
+  /* Ghost preview that follows the pointer during a drag (drawer card or hex swap).
+     Pointer-events: none so it doesn't intercept hit-testing on what's beneath. */
+  #drag-ghost {
+    position: fixed;
+    z-index: 100;
+    pointer-events: none;
+    display: none;
+    transform: translate(-50%, -50%);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(212, 160, 86, 0.55) 0%, rgba(212, 160, 86, 0.18) 60%, transparent 100%);
+    border: 2px solid var(--amber-bright);
+    box-shadow: 0 0 18px rgba(212, 160, 86, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--amber-bright);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  }
+  #drag-ghost.show { display: flex; }
   .hex-wrapper.locked .hex-bg { stroke: var(--cyan); stroke-width: 3 !important; }
   .hex-wrapper.selected .hex-bg { stroke: var(--amber-bright); stroke-width: 4 !important; filter: drop-shadow(0 0 8px var(--amber)); }
   .hex-wrapper.lifted { filter: drop-shadow(0 0 14px var(--amber-bright)) brightness(1.25); }
@@ -786,6 +810,7 @@
       Galaxy awaiting forge. Press <strong style="color:var(--amber);">Forge Galaxy</strong> to begin.
     </div>
     <div id="tile-menu"></div>
+    <div id="drag-ghost"></div>
     <div id="unused-drawer">
       <div class="drawer-header">
         <div class="drawer-title">Unused Tiles — drag onto the board</div>
@@ -2003,6 +2028,25 @@ function renderUnusedTiles() {
 ============================================================================= */
 
 let pointerDragData = null;
+
+// Floating drag ghost — a small chip that follows the finger during a drag,
+// gives the user visual confirmation that something is being moved.
+const dragGhost = document.getElementById("drag-ghost");
+function showDragGhost(tileId) {
+  if (!dragGhost) return;
+  const sys = SYSTEMS[tileId];
+  dragGhost.textContent = sys ? (sys.name.length > 8 ? sys.name.slice(0, 7) + "…" : sys.name) : String(tileId);
+  dragGhost.classList.add("show");
+}
+function positionDragGhost(x, y) {
+  if (!dragGhost) return;
+  // Offset slightly above the finger so it isn't hidden by the touch
+  dragGhost.style.left = x + "px";
+  dragGhost.style.top = (y - 40) + "px";
+}
+function hideDragGhost() {
+  if (dragGhost) dragGhost.classList.remove("show");
+}
 let longPressTimer = null;
 let longPressCandidate = null; // { key, tileId, startX, startY, pointerId }
 const LONG_PRESS_MS = 400;
@@ -2062,8 +2106,11 @@ document.addEventListener("pointermove", (e) => {
   if (!pointerDragData.moved && Math.hypot(dx, dy) > 10) {
     pointerDragData.moved = true;
     hideTileMenu();
+    showDragGhost(pointerDragData.tileId);
   }
   if (pointerDragData.moved) {
+    // Position ghost at finger
+    positionDragGhost(e.clientX, e.clientY);
     // Highlight hex under cursor
     document.querySelectorAll(".hex-wrapper.drag-over").forEach(el => el.classList.remove("drag-over"));
     const elUnder = document.elementFromPoint(e.clientX, e.clientY);
@@ -2106,6 +2153,7 @@ document.addEventListener("pointerup", (e) => {
   document.querySelectorAll(".hex-wrapper.drag-over").forEach(el => el.classList.remove("drag-over"));
   document.querySelectorAll(".hex-wrapper.lifted").forEach(el => el.classList.remove("lifted"));
   document.querySelectorAll(".unused-tile-card.dragging").forEach(el => el.classList.remove("dragging"));
+  hideDragGhost();
   pointerDragData = null;
 });
 
@@ -2114,6 +2162,7 @@ document.addEventListener("pointercancel", (e) => {
   document.querySelectorAll(".hex-wrapper.drag-over").forEach(el => el.classList.remove("drag-over"));
   document.querySelectorAll(".hex-wrapper.lifted").forEach(el => el.classList.remove("lifted"));
   document.querySelectorAll(".unused-tile-card.dragging").forEach(el => el.classList.remove("dragging"));
+  hideDragGhost();
   pointerDragData = null;
 });
 
