@@ -267,7 +267,7 @@
   }
   .toggle-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 6px 12px;
   }
   .ctrl-label {
@@ -706,7 +706,7 @@
         </div>
       </div>
 
-      <div class="ctrl-group full-width">
+      <div class="ctrl-group">
         <label class="ctrl-label">Placement Options<button class="info-icon" data-info="placement-options" aria-label="About placement options">ⓘ</button></label>
         <div class="toggle-grid">
           <div class="toggle-row" data-toggle="shuffle-priority"><div class="toggle-track"></div><div class="toggle-label">Shuffle Priority<span class="toggle-sub">Randomize pick order</span></div></div>
@@ -714,7 +714,7 @@
         </div>
       </div>
 
-      <div class="ctrl-group full-width">
+      <div class="ctrl-group">
         <label class="ctrl-label">Expansions</label>
         <div class="toggle-grid">
           <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
