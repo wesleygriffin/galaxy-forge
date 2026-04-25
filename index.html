@@ -939,7 +939,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.9";
+const APP_VERSION = "0.1.10";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -3145,7 +3145,7 @@ svg.addEventListener("contextmenu", e => e.preventDefault());
 (function setupSidebarResize() {
   const handle = document.getElementById("sidebar-resize");
   if (!handle) return;
-  const MIN_WIDTH = 228;
+  const MIN_WIDTH = 200;
   const MAX_WIDTH = 600;
   const STORAGE_KEY = "galaxy-forge.sidebar-width";
 
