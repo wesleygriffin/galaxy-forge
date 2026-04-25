@@ -31,6 +31,7 @@
     --wh-beta: #4db3c7;
     --wh-gamma: #ff7a3d;
     --wh-delta: #d4ba4d;
+    --sidebar-width: 380px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
@@ -53,7 +54,7 @@
       radial-gradient(2px 2px at 45% 40%, rgba(255,255,255,0.2), transparent),
       radial-gradient(1px 1px at 8% 62%, rgba(255,255,255,0.3), transparent);
   }
-  #app { display: grid; grid-template-columns: 340px 1fr; height: 100vh; width: 100vw; }
+  #app { display: grid; grid-template-columns: var(--sidebar-width) 1fr; height: 100vh; width: 100vw; }
   /* Settings sheet + mobile overlay behavior */
   #settings-sheet { /* inline in the sidebar on desktop */ }
   .settings-header { display: none; } /* only shown when sheet is an overlay */
@@ -164,6 +165,7 @@
     #mobile-settings-btn { display: flex; }
     .board-tools-left { display: flex; }
     #sidebar-share-group { display: none; } /* buttons moved to map tools on mobile */
+    #sidebar-resize { display: none; } /* sidebar isn't a side panel on mobile */
   }
   @media (min-width: 821px) {
     #sidebar-help-btn { display: none; }
@@ -176,6 +178,33 @@
     position: relative;
     transition: max-height 0.2s;
   }
+  /* Drag handle that sits on top of the sidebar/main boundary. position: fixed
+     keeps it out of the sidebar's overflow:auto so it never gets clipped. */
+  #sidebar-resize {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: var(--sidebar-width);
+    width: 8px;
+    margin-left: -4px;
+    cursor: col-resize;
+    z-index: 50;
+    background: transparent;
+    transition: background 0.15s;
+  }
+  #sidebar-resize::after {
+    /* A 1px visual line that brightens on hover/drag — purely cosmetic. */
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: transparent;
+    transition: background 0.15s;
+  }
+  #sidebar-resize:hover::after,
+  #sidebar-resize.active::after { background: var(--amber); }
+  #sidebar-resize.active { background: rgba(212, 160, 86, 0.08); }
   #board-area { position: relative; overflow: hidden; }
   #board-viewport {
     width: 100%;
@@ -218,7 +247,7 @@
   .ctrl-group { margin-bottom: 16px; }
   .ctrl-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
     gap: 14px 10px;
     margin-bottom: 16px;
   }
@@ -792,6 +821,8 @@
       </div>
     </div>
   </aside>
+
+  <div id="sidebar-resize" role="separator" aria-orientation="vertical" aria-label="Resize sidebar"></div>
 
   <main id="board-area">
     <div class="board-tools-left">
@@ -2987,6 +3018,70 @@ document.addEventListener("click", (e) => {
 
 // Prevent context menu on long-press (mobile)
 svg.addEventListener("contextmenu", e => e.preventDefault());
+
+/* =============================================================================
+   SIDEBAR RESIZE
+============================================================================= */
+
+(function setupSidebarResize() {
+  const handle = document.getElementById("sidebar-resize");
+  if (!handle) return;
+  const MIN_WIDTH = 300;
+  const MAX_WIDTH = 600;
+  const STORAGE_KEY = "galaxy-forge.sidebar-width";
+
+  // Restore saved width on load.
+  try {
+    const saved = parseInt(localStorage.getItem(STORAGE_KEY) || "", 10);
+    if (Number.isFinite(saved) && saved >= MIN_WIDTH && saved <= MAX_WIDTH) {
+      document.documentElement.style.setProperty("--sidebar-width", saved + "px");
+    }
+  } catch (_) { /* localStorage may be unavailable in private mode */ }
+
+  let dragging = false;
+
+  handle.addEventListener("pointerdown", (e) => {
+    // Resize is desktop-only; the mobile breakpoint hides the handle but guard anyway.
+    if (window.innerWidth <= 820) return;
+    dragging = true;
+    handle.classList.add("active");
+    handle.setPointerCapture(e.pointerId);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    e.preventDefault();
+  });
+
+  handle.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    let w = e.clientX;
+    if (w < MIN_WIDTH) w = MIN_WIDTH;
+    if (w > MAX_WIDTH) w = MAX_WIDTH;
+    document.documentElement.style.setProperty("--sidebar-width", w + "px");
+  });
+
+  function endDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove("active");
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+    try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+    // Persist the final width.
+    const w = getComputedStyle(document.documentElement).getPropertyValue("--sidebar-width").trim();
+    const num = parseInt(w, 10);
+    if (Number.isFinite(num)) {
+      try { localStorage.setItem(STORAGE_KEY, String(num)); } catch (_) {}
+    }
+  }
+  handle.addEventListener("pointerup", endDrag);
+  handle.addEventListener("pointercancel", endDrag);
+
+  // Double-click to reset to the default width (clears the saved override).
+  handle.addEventListener("dblclick", () => {
+    document.documentElement.style.removeProperty("--sidebar-width");
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+  });
+})();
 
 /* =============================================================================
    INITIALIZATION
