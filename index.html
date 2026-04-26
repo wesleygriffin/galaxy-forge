@@ -58,11 +58,12 @@
   /* Settings sheet + mobile overlay behavior */
   #settings-sheet { /* inline in the sidebar on desktop */ }
   .settings-header { display: none; } /* only shown when sheet is an overlay */
-  .settings-footer {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-  }
+  /* Clear Locks lives in the ctrl-grid as a labelless cell paired with the
+     Behavior section. align-self: end pushes the button to the bottom of
+     its row so it visually aligns with the toggle row inside Behavior
+     (below the BEHAVIOR label) instead of floating at the top of the cell
+     where the label would have been. */
+  .ctrl-group-bottom-aligned { align-self: end; }
   /* Wrench is mobile-only — desktop has the persistent sidebar.
      The mobile breakpoint below flips this to display: flex. */
   #mobile-settings-btn { display: none; }
@@ -891,9 +892,11 @@
       </div>
 
       <div class="ctrl-group">
-        <label class="ctrl-label">Behavior</label>
+        <label class="ctrl-label">Expansions</label>
         <div class="toggle-grid">
-          <div class="toggle-row" data-toggle="auto-refresh"><div class="toggle-track"></div><div class="toggle-label">Auto-refresh</div></div>
+          <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
+          <div class="toggle-row on" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
+          <div class="toggle-row on" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
         </div>
       </div>
 
@@ -906,16 +909,15 @@
       </div>
 
       <div class="ctrl-group">
-        <label class="ctrl-label">Expansions</label>
+        <label class="ctrl-label">Behavior</label>
         <div class="toggle-grid">
-          <div class="toggle-row on" data-toggle="pok"><div class="toggle-track"></div><div class="toggle-label">Prophecy of Kings<span class="toggle-sub">7 factions · 20+ systems · hyperlanes</span></div></div>
-          <div class="toggle-row on" data-toggle="codex"><div class="toggle-track"></div><div class="toggle-label">Codex (I–III)<span class="toggle-sub">Keleres, relics</span></div></div>
-          <div class="toggle-row on" data-toggle="te"><div class="toggle-track"></div><div class="toggle-label">Thunder's Edge<span class="toggle-sub">6 factions, Fracture</span></div></div>
+          <div class="toggle-row" data-toggle="auto-refresh"><div class="toggle-track"></div><div class="toggle-label">Auto-refresh</div></div>
         </div>
       </div>
-    </div>
-    <div class="settings-footer">
-      <button class="btn-secondary" id="clear-locks-btn">Clear Locks &amp; Filters</button>
+
+      <div class="ctrl-group ctrl-group-bottom-aligned">
+        <button class="btn-secondary" id="clear-locks-btn">Clear Locks &amp; Filters</button>
+      </div>
     </div>
     </div>
   </aside>
@@ -934,7 +936,7 @@
           <button class="tool-menu-item" id="share-btn" role="menuitem" title="Copy a shareable link to this map"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Link</button>
           <button class="tool-menu-item" id="export-png-btn" role="menuitem" title="Download a high-resolution PNG image of the map"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>PNG</button>
           <button class="tool-menu-item" id="export-btn" role="menuitem" title="Download map state as JSON"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg>JSON</button>
-          <button class="tool-menu-item" id="export-systems-btn" role="menuitem" title="Download the full hex-data database (JSON)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>DB</button>
+          <button class="tool-menu-item" id="export-systems-btn" role="menuitem" title="Download the full hex-data database (JSON)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>Hex DB</button>
         </div>
       </div>
       <button class="tool-btn" id="board-help-btn" title="Help" aria-label="Help">?</button>
@@ -972,7 +974,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.19";
+const APP_VERSION = "0.1.21";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2868,7 +2870,7 @@ const HELP_TEXT = {
       <li>Double-tap to reset the view.</li>
     </ul>
     <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> opens settings. Adjust player count, board style, placement style, weighting, expansions, and toggles. Clear Locks &amp; Filters lives at the bottom of the sheet to wipe lock and include/exclude state.</p>
-    <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> opens the export menu: Link copies a shareable URL, PNG downloads a high-resolution image, JSON saves the current map state, DB dumps the full hex catalog.</p>
+    <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> opens the export menu: Link copies a shareable URL, PNG downloads a high-resolution image, JSON saves the current map state, Hex DB dumps the full hex catalog.</p>
     <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385"/><path d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0"/></svg> forges a new galaxy. Locked tiles stay where they are; everything else gets reshuffled according to your current settings. Tap repeatedly to roll variations.</p>
     <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">#</span> toggles the tile-number overlay. Useful for cross-referencing system IDs against the rulebook or comparing setups by tile composition.</p>
     <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">⊞</span> opens the unused-tile drawer. See every tile not currently on the board, drag any of them onto a hex to swap it in, or use them to build a custom layout from scratch.</p>
