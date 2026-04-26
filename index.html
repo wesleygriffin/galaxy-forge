@@ -75,9 +75,14 @@
     top: 0;
     background: var(--bg-panel);
     padding: 14px 0;
-    margin-bottom: 12px;
+    margin: 0 auto 12px;
     border-bottom: 1px solid var(--border);
     z-index: 1;
+    /* Cap the header width to match the constrained ctrl-grid below so
+       the × close button sits adjacent to the content's right edge,
+       not flush with the viewport. */
+    max-width: 460px;
+    width: 100%;
   }
   .settings-header { display: none; } /* only shown when sheet is .open */
   .settings-title {
@@ -128,7 +133,12 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
     gap: 14px 10px;
-    margin-bottom: 16px;
+    /* Cap at a 2-column-friendly width on wide overlays. minmax(155, 1fr)
+       with 10px gap fits 3 cols starting at 485px, so 460 keeps us solidly
+       at 2 cols even with subpixel rounding. Auto margins center the grid
+       inside the full-width settings overlay. */
+    max-width: 460px;
+    margin: 0 auto 16px;
   }
   .ctrl-grid > .ctrl-group { margin-bottom: 0; }
   .ctrl-grid > .full-width { grid-column: 1 / -1; }
@@ -804,7 +814,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.26";
+const APP_VERSION = "0.1.27";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
