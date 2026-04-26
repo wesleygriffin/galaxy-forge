@@ -455,16 +455,21 @@
     z-index: 10;
   }
   .confidence-note { color: var(--copper); margin-top: 2px; font-size: 10px; }
-  .board-version {
-    position: absolute;
-    bottom: 14px;
-    right: 14px;
+  /* Small dimmed version label that sits just to the right of the
+     'Galaxy Forge' title in the settings overlay header. Inline-block
+     with a margin so the title's letter-spacing doesn't affect it.
+     Lower-case (overrides .settings-title's text-transform) and lighter
+     weight to read as supplementary, not part of the brand. */
+  .settings-version {
+    display: inline-block;
+    margin-left: 10px;
     font-size: 10px;
     color: var(--text-faint);
     letter-spacing: 0.12em;
+    font-weight: 400;
+    text-transform: none;
     font-variant-numeric: tabular-nums;
-    z-index: 10;
-    pointer-events: none;
+    vertical-align: 1px;
   }
   #tile-menu {
     position: absolute;
@@ -667,7 +672,7 @@
 <div id="app">
   <div id="settings-sheet">
       <div class="settings-header">
-        <span class="settings-title">Galaxy Forge</span>
+        <span class="settings-title">Galaxy Forge<span class="settings-version" id="settings-version" aria-label="App version"></span></span>
         <button id="settings-close" aria-label="Close settings">×</button>
       </div>
       <div class="ctrl-grid">
@@ -772,7 +777,6 @@
     <div class="board-status" id="board-status">
       Galaxy awaiting forge. Press <strong style="color:var(--amber);">Forge Galaxy</strong> to begin.
     </div>
-    <div class="board-version" id="board-version" aria-hidden="true"></div>
     <div id="tile-menu"></div>
     <div id="drag-ghost"></div>
     <div id="unused-drawer">
@@ -798,11 +802,11 @@
 </div>
 
 <script>
-/* Bump this when shipping a noticeable change. Rendered in dimmed text in the
-   bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.25";
+/* Bump this when shipping a noticeable change. Rendered as small dimmed
+   text next to the 'Galaxy Forge' title inside the settings overlay. */
+const APP_VERSION = "0.1.26";
 (() => {
-  const el = document.getElementById("board-version");
+  const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
 })();
 
