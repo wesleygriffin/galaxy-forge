@@ -85,7 +85,9 @@
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
     z-index: 80;
   }
-  #settings-sheet.open .settings-header {
+  /* Sticky title bar at the top of any dialog/popup. Used in both the
+     settings overlay and the large help info popup. */
+  .settings-header {
     display: flex;
     align-items: center;
     position: sticky;
@@ -96,7 +98,6 @@
     border-bottom: 1px solid var(--border);
     z-index: 1;
   }
-  .settings-header { display: none; } /* only shown when sheet is .open */
   .settings-title {
     font-size: 13px;
     text-transform: uppercase;
@@ -239,7 +240,9 @@
     font-size: 12px;
     color: var(--text);
     max-width: 320px;
-    z-index: 50;
+    /* Above settings-sheet (z-index: 80) so info icons inside the settings
+       overlay open their popups above the panel, not behind it. */
+    z-index: 100;
     box-shadow: 0 6px 20px rgba(0,0,0,0.7);
     border-radius: 3px;
     line-height: 1.5;
@@ -247,17 +250,30 @@
     text-transform: none;
     font-weight: normal;
   }
+  /* Large variant mirrors the settings-panel chrome: same gradient bg,
+     same padding pattern (0 horizontal/bottom padding so the header can
+     stretch to the left/right edges of the panel and the h-rule
+     underneath spans the full width). */
   .info-popup-large {
     max-width: min(420px, calc(100vw - 32px));
+    background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
+    padding: 0 18px 18px 18px;
   }
+  /* Section headings inside any info popup match the .ctrl-label style
+     used inside the settings overlay (10px uppercase amber w/ 0.18em ls)
+     so dialogs feel typographically consistent. */
   .info-popup h4 {
-    color: var(--amber-bright);
-    font-size: 12px;
+    color: var(--amber);
+    font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.18em;
     margin-bottom: 6px;
     font-weight: 600;
   }
+  /* The first h4 inside a non-large popup gets a top margin matching
+     other content; in the large popup the header sits above the first
+     h4, so override to remove that visual gap. */
+  .info-popup-large h4 { margin-top: 4px; }
   .info-popup p { margin-bottom: 8px; }
   .info-popup p:last-child { margin-bottom: 0; }
   .info-popup ul { padding-left: 14px; margin: 6px 0; }
@@ -799,7 +815,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.32";
+const APP_VERSION = "0.1.33";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2708,14 +2724,15 @@ document.getElementById("board-help-btn").onclick = (e) => {
 
 // ---- Help popups for control headers ----
 const HELP_TEXT = {
-  "app-help": `<h4>Galaxy Forge</h4>
-    <p style="color: var(--amber); font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; font-weight: 600; margin-bottom: 4px;">Controls</p>
+  "app-help": `<div class="settings-header"><span class="settings-title">Galaxy Forge<span class="settings-version">v${APP_VERSION}</span></span></div>
+    <h4>Controls</h4>
     <ul>
       <li>Long-press + drag to swap tiles.</li>
       <li>Pan by dragging.</li>
       <li>Pinch to zoom.</li>
       <li>Double-tap to reset the view.</li>
     </ul>
+    <h4>Toolbar</h4>
     <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> opens settings. Adjust player count, board style, placement style, weighting, expansions, and toggles. Clear Locks &amp; Filters lives at the bottom of the sheet to wipe lock and include/exclude state.</p>
     <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> opens the export menu: Link copies a shareable URL, PNG downloads a high-resolution image, JSON saves the current map state, Hex DB dumps the full hex catalog.</p>
     <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385"/><path d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0"/></svg> forges a new galaxy. Locked tiles stay where they are; everything else gets reshuffled according to your current settings. Tap repeatedly to roll variations.</p>
