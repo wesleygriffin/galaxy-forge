@@ -58,14 +58,34 @@
      overlay via .open. Same behavior on mobile and desktop now that there's
      no persistent sidebar. */
   #settings-sheet { display: none; }
+  /* When open: dim backdrop covers the viewport, panel sits centered on top.
+     Click on the backdrop (target === settings-sheet) closes via JS below. */
   #settings-sheet.open {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
     z-index: 80;
+    padding: 24px 16px;
+  }
+  /* The visible modal card. Constrained width keeps the ctrl-grid inside at
+     2 columns (auto-fit minmax(155, 1fr) needs ≥485px content width to
+     promote to 3 cols; this panel's content area is ~464px). max-height
+     plus overflow-y lets the panel scroll if a user's viewport is short
+     while still keeping the rounded card chrome visible at top and bottom. */
+  .settings-panel {
+    background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 0 18px 24px 18px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 100%;
     overflow-y: auto;
-    padding: 0 18px 40px 18px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
   }
   #settings-sheet.open .settings-header {
     display: flex;
@@ -75,14 +95,9 @@
     top: 0;
     background: var(--bg-panel);
     padding: 14px 0;
-    margin: 0 auto 12px;
+    margin: 0 0 12px;
     border-bottom: 1px solid var(--border);
     z-index: 1;
-    /* Cap the header width to match the constrained ctrl-grid below so
-       the × close button sits adjacent to the content's right edge,
-       not flush with the viewport. */
-    max-width: 460px;
-    width: 100%;
   }
   .settings-header { display: none; } /* only shown when sheet is .open */
   .settings-title {
@@ -133,12 +148,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
     gap: 14px 10px;
-    /* Cap at a 2-column-friendly width on wide overlays. minmax(155, 1fr)
-       with 10px gap fits 3 cols starting at 485px, so 460 keeps us solidly
-       at 2 cols even with subpixel rounding. Auto margins center the grid
-       inside the full-width settings overlay. */
-    max-width: 460px;
-    margin: 0 auto 16px;
+    margin-bottom: 16px;
   }
   .ctrl-grid > .ctrl-group { margin-bottom: 0; }
   .ctrl-grid > .full-width { grid-column: 1 / -1; }
@@ -681,6 +691,7 @@
 <body>
 <div id="app">
   <div id="settings-sheet">
+    <div class="settings-panel">
       <div class="settings-header">
         <span class="settings-title">Galaxy Forge<span class="settings-version" id="settings-version" aria-label="App version"></span></span>
         <button id="settings-close" aria-label="Close settings">×</button>
@@ -765,6 +776,7 @@
       </div>
     </div>
     </div>
+  </div>
 
   <main id="board-area">
     <div class="board-tools">
@@ -814,7 +826,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.27";
+const APP_VERSION = "0.1.28";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2691,13 +2703,25 @@ document.getElementById("board-help-btn").onclick = (e) => {
   });
 })();
 
-// Mobile settings sheet open/close
-document.getElementById("tool-settings").onclick = () => {
-  document.getElementById("settings-sheet").classList.add("open");
-};
-document.getElementById("settings-close").onclick = () => {
-  document.getElementById("settings-sheet").classList.remove("open");
-};
+// Settings overlay open/close. The dismiss paths are: × button click,
+// click on the backdrop area outside the panel, or Esc. Same handler is
+// used on mobile and desktop — the modal sizes itself to fit either.
+(() => {
+  const sheet = document.getElementById("settings-sheet");
+  const open = () => sheet.classList.add("open");
+  const close = () => sheet.classList.remove("open");
+  document.getElementById("tool-settings").onclick = open;
+  document.getElementById("settings-close").onclick = close;
+  // Backdrop click: target is settings-sheet itself only when the user
+  // clicked the dim margin around the panel (clicks inside the panel
+  // bubble up with target = panel/control, not the sheet).
+  sheet.addEventListener("click", (e) => {
+    if (e.target === sheet) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && sheet.classList.contains("open")) close();
+  });
+})();
 
 // ---- Help popups for control headers ----
 const HELP_TEXT = {
