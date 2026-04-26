@@ -58,34 +58,32 @@
      overlay via .open. Same behavior on mobile and desktop now that there's
      no persistent sidebar. */
   #settings-sheet { display: none; }
-  /* When open: dim backdrop covers the viewport, panel sits centered on top.
-     Click on the backdrop (target === settings-sheet) closes via JS below. */
-  #settings-sheet.open {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  /* Non-modal popover that pops in next to the toolbar (wrench is the
+     trigger at the bottom of the toolbar). The sheet is just a transparent
+     wrapper; .settings-panel inside is the visible card. The board behind
+     stays fully interactive — no backdrop blocks clicks. */
+  #settings-sheet.open { display: block; }
+  /* The visible popover card. Constrained width keeps the ctrl-grid inside
+     at 2 columns (auto-fit minmax(155, 1fr) needs ≥485px content width to
+     promote to 3 cols; panel content area is ~464px). max-height plus
+     overflow-y lets the panel scroll if the viewport is short.
+     Position anchors top-left to the toolbar's top so the panel appears
+     'next to' the toolbar, not floating in the middle of the board.
+     14px top + 14px+40px+6px gap = top:14, left:60. */
+  #settings-sheet.open .settings-panel {
     position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(2px);
-    z-index: 80;
-    padding: 24px 16px;
-  }
-  /* The visible modal card. Constrained width keeps the ctrl-grid inside at
-     2 columns (auto-fit minmax(155, 1fr) needs ≥485px content width to
-     promote to 3 cols; this panel's content area is ~464px). max-height
-     plus overflow-y lets the panel scroll if a user's viewport is short
-     while still keeping the rounded card chrome visible at top and bottom. */
-  .settings-panel {
+    top: 14px;
+    left: 60px;
     background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
     border: 1px solid var(--border-strong);
     border-radius: 4px;
     padding: 0 18px 24px 18px;
-    width: 100%;
+    width: calc(100vw - 74px);
     max-width: 500px;
-    max-height: 100%;
+    max-height: calc(100vh - 28px);
     overflow-y: auto;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    z-index: 80;
   }
   #settings-sheet.open .settings-header {
     display: flex;
@@ -685,6 +683,14 @@
     .board-tools {
       flex-direction: row;
     }
+    /* Settings popover: drop below the horizontal toolbar instead of next
+       to it. 14px (toolbar top) + 40px (button height) + 10px gap = 64. */
+    #settings-sheet.open .settings-panel {
+      top: 64px;
+      left: 14px;
+      width: calc(100vw - 28px);
+      max-height: calc(100vh - 78px);
+    }
   }
 </style>
 </head>
@@ -826,7 +832,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.28";
+const APP_VERSION = "0.1.29";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2703,23 +2709,34 @@ document.getElementById("board-help-btn").onclick = (e) => {
   });
 })();
 
-// Settings overlay open/close. The dismiss paths are: × button click,
-// click on the backdrop area outside the panel, or Esc. Same handler is
-// used on mobile and desktop — the modal sizes itself to fit either.
+// Settings popover open/close. Non-modal — board behind stays interactive.
+// Dismiss paths: × button, click anywhere outside the panel, or Esc.
+// Wrench picks up the standard .tool-btn.active amber-fill while open,
+// matching how the export dropdown's trigger looks when its menu is open.
 (() => {
   const sheet = document.getElementById("settings-sheet");
-  const open = () => sheet.classList.add("open");
-  const close = () => sheet.classList.remove("open");
-  document.getElementById("tool-settings").onclick = open;
-  document.getElementById("settings-close").onclick = close;
-  // Backdrop click: target is settings-sheet itself only when the user
-  // clicked the dim margin around the panel (clicks inside the panel
-  // bubble up with target = panel/control, not the sheet).
-  sheet.addEventListener("click", (e) => {
-    if (e.target === sheet) close();
+  const panel = sheet.querySelector(".settings-panel");
+  const trigger = document.getElementById("tool-settings");
+  const setOpen = (open) => {
+    sheet.classList.toggle("open", open);
+    trigger.classList.toggle("active", open);
+    trigger.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+  trigger.setAttribute("aria-haspopup", "menu");
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.onclick = (e) => {
+    e.stopPropagation();
+    setOpen(!sheet.classList.contains("open"));
+  };
+  document.getElementById("settings-close").onclick = () => setOpen(false);
+  // Click anywhere outside the panel and trigger closes.
+  document.addEventListener("click", (e) => {
+    if (!sheet.classList.contains("open")) return;
+    if (panel.contains(e.target) || trigger.contains(e.target)) return;
+    setOpen(false);
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && sheet.classList.contains("open")) close();
+    if (e.key === "Escape" && sheet.classList.contains("open")) setOpen(false);
   });
 })();
 
