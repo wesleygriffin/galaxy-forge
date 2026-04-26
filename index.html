@@ -97,29 +97,13 @@
       overflow: hidden;
     }
     #board-area { flex: 1 1 auto; min-height: 0; }
-    #sidebar > *:not(.brand-title):not(#sidebar-help-btn):not(#settings-sheet) { display: none; }
+    #sidebar > *:not(.brand-title):not(#settings-sheet) { display: none; }
     #sidebar .brand-title {
       font-size: 15px;
       letter-spacing: 0.2em;
       flex: 1;
       margin: 0;
-      order: 1;
     }
-    #sidebar-help-btn {
-      position: static;
-      flex-shrink: 0;
-      order: 2;
-      background: var(--bg-deep);
-      border: 1px solid var(--border-strong);
-      color: var(--amber);
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    #sidebar-help-btn:hover { color: var(--amber-bright); border-color: var(--amber); }
 
     /* Hide the settings sheet in the sidebar on mobile; it only appears as an overlay */
     #settings-sheet { display: none; }
@@ -166,10 +150,7 @@
     .board-tools-left { display: flex; }
     #sidebar-resize { display: none; } /* sidebar isn't a side panel on mobile */
     #sidebar-toggle { display: none; } /* collapse is meaningless on mobile */
-    #board-help-btn { display: none; } /* help button is in the sidebar bar on mobile */
-  }
-  @media (min-width: 821px) {
-    #sidebar-help-btn { display: none; }
+    #board-help-btn { display: none; } /* mobile uses #mobile-help-btn in the floating tools column */
   }
   #sidebar {
     background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
@@ -791,7 +772,6 @@
 <body>
 <div id="app">
   <aside id="sidebar">
-    <button id="sidebar-help-btn" title="Help" aria-label="Help">?</button>
     <div class="brand-title">Galaxy Forge</div>
     <div class="brand-rule"></div>
 
@@ -894,6 +874,7 @@
   <main id="board-area">
     <div class="board-tools-left">
       <button class="tool-btn" id="mobile-settings-btn" title="Settings" aria-label="Open settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button>
+      <button class="tool-btn" id="mobile-help-btn" title="Help" aria-label="Help">?</button>
     </div>
     <div class="board-tools">
       <button class="tool-btn tool-btn-primary" id="tool-forge" title="Forge new galaxy (keeps locks)" aria-label="Forge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385"/><path d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0"/></svg></button>
@@ -933,7 +914,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.12";
+const APP_VERSION = "0.1.13";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2772,17 +2753,14 @@ document.getElementById("drawer-close").onclick = () => {
   document.getElementById("tool-unused").classList.remove("active");
 };
 
-// Sidebar help button (mobile)
-document.getElementById("sidebar-help-btn").onclick = (e) => {
+// Help buttons (mobile floating + desktop right toolbar) — same handler, both
+// open the app help info popup anchored to the clicked button.
+const openHelpPopup = (e) => {
   e.stopPropagation();
   showInfoPopup("app-help", e.currentTarget);
 };
-
-// Board help button (desktop, top-right of map)
-document.getElementById("board-help-btn").onclick = (e) => {
-  e.stopPropagation();
-  showInfoPopup("app-help", e.currentTarget);
-};
+document.getElementById("mobile-help-btn").onclick = openHelpPopup;
+document.getElementById("board-help-btn").onclick = openHelpPopup;
 
 // Mobile settings sheet open/close
 document.getElementById("mobile-settings-btn").onclick = () => {
