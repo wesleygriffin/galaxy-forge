@@ -815,7 +815,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.33";
+const APP_VERSION = "0.1.34";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2733,12 +2733,10 @@ const HELP_TEXT = {
       <li>Double-tap to reset the view.</li>
     </ul>
     <h4>Toolbar</h4>
-    <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> opens settings. Adjust player count, board style, placement style, weighting, expansions, and toggles. Clear Locks &amp; Filters lives at the bottom of the sheet to wipe lock and include/exclude state.</p>
-    <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> opens the export menu: Link copies a shareable URL, PNG downloads a high-resolution image, JSON saves the current map state, Hex DB dumps the full hex catalog.</p>
-    <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385"/><path d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0"/></svg> forges a new galaxy. Locked tiles stay where they are; everything else gets reshuffled according to your current settings. Tap repeatedly to roll variations.</p>
-    <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">#</span> toggles the tile-number overlay. Useful for cross-referencing system IDs against the rulebook or comparing setups by tile composition.</p>
-    <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">⊞</span> opens the unused-tile drawer. See every tile not currently on the board, drag any of them onto a hex to swap it in, or use them to build a custom layout from scratch.</p>
-    <p style="color: var(--copper); font-size: 11px; margin-top: 10px;">Base + PoK tile data is verified. Thunder's Edge tiles (Fracture, expedition systems) are included structurally — verify against your TE rulebook before tournament play.</p>`,
+    <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Adjust player count, board style, placement style, weighting, expansions, and toggles. Clear Locks &amp; Filters removes any lock and include/exclude state.</p>
+    <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385"/><path d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0"/></svg> Forge a new galaxy. Locked tiles stay where they are; everything else gets reshuffled according to your current settings. Tap repeatedly to roll variations.</p>
+    <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">#</span> Tile-number overlay. Useful for cross-referencing system IDs against the rulebook or comparing setups by tile composition.</p>
+    <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">⊞</span> opens the unused-tile drawer. See every tile not currently on the board, drag any of them onto a hex to swap it in, or use them to build a custom layout from scratch.</p>`,
 
   "board-style": `<h4>Board Style</h4>
     <p>Changes how the tiles are actually laid out on a newly generated map.</p>
