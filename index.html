@@ -88,7 +88,6 @@
   #settings-sheet.open .settings-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     position: sticky;
     top: 0;
     background: var(--bg-panel);
@@ -104,17 +103,6 @@
     letter-spacing: 0.22em;
     color: var(--amber);
     font-weight: 600;
-  }
-  #settings-close {
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    color: var(--amber);
-    width: 34px;
-    height: 34px;
-    border-radius: 2px;
-    font-size: 18px;
-    cursor: pointer;
-    line-height: 1;
   }
 
   /* On mobile #board-area is the sole visible flex child of #app
@@ -261,27 +249,7 @@
   }
   .info-popup-large {
     max-width: min(420px, calc(100vw - 32px));
-    padding-right: 36px; /* leave room for close button */
   }
-  .info-popup-close {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 26px;
-    height: 26px;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    font-size: 16px;
-    line-height: 1;
-    cursor: pointer;
-    border-radius: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-  }
-  .info-popup-close:hover { color: var(--amber); border-color: var(--amber); }
   .info-popup h4 {
     color: var(--amber-bright);
     font-size: 12px;
@@ -700,7 +668,6 @@
     <div class="settings-panel">
       <div class="settings-header">
         <span class="settings-title">Galaxy Forge<span class="settings-version" id="settings-version" aria-label="App version"></span></span>
-        <button id="settings-close" aria-label="Close settings">×</button>
       </div>
       <div class="ctrl-grid">
       <div class="ctrl-group">
@@ -832,7 +799,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.29";
+const APP_VERSION = "0.1.30";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2728,7 +2695,6 @@ document.getElementById("board-help-btn").onclick = (e) => {
     e.stopPropagation();
     setOpen(!sheet.classList.contains("open"));
   };
-  document.getElementById("settings-close").onclick = () => setOpen(false);
   // Click anywhere outside the panel and trigger closes.
   document.addEventListener("click", (e) => {
     if (!sheet.classList.contains("open")) return;
@@ -2794,6 +2760,17 @@ function closeInfoPopup() {
     currentInfoPopup = null;
   }
 }
+// Esc closes any open info popup. Doesn't conflict with the settings or
+// export-dropdown Esc handlers — each one only acts when its own state is
+// open, and these handlers can coexist on the same keydown event.
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && currentInfoPopup) closeInfoPopup();
+});
+// Esc closes any open info-popup. Click-outside is handled by the
+// document click listener further down where info-popup triggers are wired.
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && currentInfoPopup) closeInfoPopup();
+});
 function showInfoPopup(key, anchor) {
   // Toggle: if clicking the same anchor again, just close
   if (currentInfoPopup && currentInfoPopup.dataset.forKey === key) {
@@ -2804,16 +2781,9 @@ function showInfoPopup(key, anchor) {
   const popup = document.createElement("div");
   popup.className = "info-popup" + (key === "app-help" ? " info-popup-large" : "");
   popup.dataset.forKey = key;
-  popup.innerHTML = `<button class="info-popup-close" aria-label="Close">×</button>` + (HELP_TEXT[key] || "");
+  popup.innerHTML = HELP_TEXT[key] || "";
   document.body.appendChild(popup);
   currentInfoPopup = popup;
-
-  // Wire up the close button
-  popup.querySelector(".info-popup-close").addEventListener("click", (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    closeInfoPopup();
-  });
 
   // Position: try below the anchor, flipping above if it would overflow.
   // Clamp horizontally to viewport with a margin.
