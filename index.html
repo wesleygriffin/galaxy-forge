@@ -521,6 +521,60 @@
   }
   .tool-btn:hover { border-color: var(--amber); color: var(--amber-bright); }
   .tool-btn.active { background: rgba(212, 160, 86, 0.25); border-color: var(--amber); color: var(--amber-bright); }
+
+  /* Dropdown wrapper for the export menu. position:relative so the menu can
+     be absolutely positioned next to the trigger button. The wrapper sits in
+     .board-tools as a flex item — same width/height as a .tool-btn since
+     its only child (other than the menu) is one. */
+  .tool-dropdown-wrap { position: relative; }
+  .tool-menu {
+    position: absolute;
+    background: rgba(14, 20, 28, 0.95);
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 30;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    /* Mobile default: drop below the trigger, anchored to its left edge. */
+    top: calc(100% + 6px);
+    left: 0;
+  }
+  .tool-menu[hidden] { display: none; }
+  .tool-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 8px 10px;
+    background: transparent;
+    border: none;
+    color: var(--amber);
+    font-family: inherit;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    cursor: pointer;
+    border-radius: 2px;
+    white-space: nowrap;
+    text-align: left;
+  }
+  .tool-menu-item:hover {
+    background: rgba(212, 160, 86, 0.18);
+    color: var(--amber-bright);
+  }
+  @media (min-width: 821px) {
+    /* Desktop: toolbar lives at the right edge, so flip the menu to the
+       left of the trigger so it doesn't fly off-screen. Top-align with
+       the trigger button itself. */
+    .tool-menu {
+      top: 0;
+      right: calc(100% + 6px);
+      left: auto;
+    }
+  }
   .tool-btn-primary {
     background: linear-gradient(180deg, var(--amber) 0%, var(--copper) 100%);
     border-color: var(--amber);
@@ -862,14 +916,6 @@
     </div>
     <div class="settings-footer">
       <button class="btn-secondary" id="clear-locks-btn">Clear Locks &amp; Filters</button>
-      <div class="btn-row" id="sidebar-share-group">
-        <button class="btn-secondary" id="share-btn" title="Copy a shareable link to this map"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Link</button>
-        <button class="btn-secondary" id="export-png-btn" title="Download a high-resolution PNG image of the map"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>PNG</button>
-      </div>
-      <div class="btn-row">
-        <button class="btn-secondary" id="export-btn" title="Download map state as JSON"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg>JSON</button>
-        <button class="btn-secondary" id="export-systems-btn" title="Download the full hex-data database (JSON)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>DB</button>
-      </div>
     </div>
     </div>
   </aside>
@@ -882,6 +928,15 @@
       <button class="tool-btn tool-btn-primary" id="tool-forge" title="Forge new galaxy (keeps locks)" aria-label="Forge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385"/><path d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0"/></svg></button>
       <button class="tool-btn" id="tool-numbers" title="Toggle tile number overlay">#</button>
       <button class="tool-btn" id="tool-unused" title="Show unused tiles">⊞</button>
+      <div class="tool-dropdown-wrap">
+        <button class="tool-btn" id="tool-export" title="Export" aria-label="Export" aria-haspopup="menu" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        <div class="tool-menu" id="export-menu" role="menu" hidden>
+          <button class="tool-menu-item" id="share-btn" role="menuitem" title="Copy a shareable link to this map"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Link</button>
+          <button class="tool-menu-item" id="export-png-btn" role="menuitem" title="Download a high-resolution PNG image of the map"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>PNG</button>
+          <button class="tool-menu-item" id="export-btn" role="menuitem" title="Download map state as JSON"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg>JSON</button>
+          <button class="tool-menu-item" id="export-systems-btn" role="menuitem" title="Download the full hex-data database (JSON)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>DB</button>
+        </div>
+      </div>
       <button class="tool-btn" id="board-help-btn" title="Help" aria-label="Help">?</button>
       <button class="tool-btn" id="mobile-settings-btn" title="Settings" aria-label="Open settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button>
     </div>
@@ -917,7 +972,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.18";
+const APP_VERSION = "0.1.19";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2764,6 +2819,36 @@ document.getElementById("board-help-btn").onclick = (e) => {
   showInfoPopup("app-help", e.currentTarget);
 };
 
+// Export dropdown — single trigger button opens a menu containing the four
+// export actions (Link / PNG / JSON / DB). The action handlers themselves
+// (share-btn, export-png-btn, export-btn, export-systems-btn) are bound
+// elsewhere via direct or delegated handlers and don't need any wiring here.
+(() => {
+  const trigger = document.getElementById("tool-export");
+  const menu = document.getElementById("export-menu");
+  const setOpen = (open) => {
+    menu.hidden = !open;
+    trigger.setAttribute("aria-expanded", open ? "true" : "false");
+    trigger.classList.toggle("active", open);
+  };
+  trigger.onclick = (e) => {
+    e.stopPropagation();
+    setOpen(menu.hidden);
+  };
+  // Any click inside the menu closes it — the action's own click handler
+  // still runs because click events bubble in DOM order.
+  menu.addEventListener("click", () => setOpen(false));
+  // Click anywhere else closes the menu.
+  document.addEventListener("click", (e) => {
+    if (menu.hidden) return;
+    if (!menu.contains(e.target) && !trigger.contains(e.target)) setOpen(false);
+  });
+  // Esc closes the menu.
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !menu.hidden) setOpen(false);
+  });
+})();
+
 // Mobile settings sheet open/close
 document.getElementById("mobile-settings-btn").onclick = () => {
   document.getElementById("settings-sheet").classList.add("open");
@@ -2782,7 +2867,8 @@ const HELP_TEXT = {
       <li>Pinch to zoom.</li>
       <li>Double-tap to reset the view.</li>
     </ul>
-    <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> opens settings. Adjust player count, board style, placement style, weighting, expansions, and toggles. Clear Locks &amp; Filters lives at the bottom of the sheet to wipe lock and include/exclude state, along with buttons to Copy a share link, save the map state as JSON, download a high-res PNG, or download the full hex DB.</p>
+    <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> opens settings. Adjust player count, board style, placement style, weighting, expansions, and toggles. Clear Locks &amp; Filters lives at the bottom of the sheet to wipe lock and include/exclude state.</p>
+    <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> opens the export menu: Link copies a shareable URL, PNG downloads a high-resolution image, JSON saves the current map state, DB dumps the full hex catalog.</p>
     <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385"/><path d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0"/></svg> forges a new galaxy. Locked tiles stay where they are; everything else gets reshuffled according to your current settings. Tap repeatedly to roll variations.</p>
     <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">#</span> toggles the tile-number overlay. Useful for cross-referencing system IDs against the rulebook or comparing setups by tile composition.</p>
     <p><span style="color:var(--amber);font-size:16px;font-weight:bold;vertical-align:-1px;">⊞</span> opens the unused-tile drawer. See every tile not currently on the board, drag any of them onto a hex to swap it in, or use them to build a custom layout from scratch.</p>
