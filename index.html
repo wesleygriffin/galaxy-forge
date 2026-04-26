@@ -965,7 +965,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered in dimmed text in the
    bottom-right of the map view by the snippet a few lines below. */
-const APP_VERSION = "0.1.23";
+const APP_VERSION = "0.1.24";
 (() => {
   const el = document.getElementById("board-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -3190,10 +3190,13 @@ svg.addEventListener("contextmenu", e => e.preventDefault());
 (function setupSidebarResize() {
   const handle = document.getElementById("sidebar-resize");
   if (!handle) return;
-  // 224 is the minimum width at which 'Clear Locks & Filters' fits on a
-  // single line — the button is the longest fixed-width element in the
-  // settings footer, so it sets the floor for the sidebar.
-  const MIN_WIDTH = 224;
+  // 360 is the minimum sidebar width at which the outer .ctrl-grid stays
+  // two columns (minmax(155px, 1fr) plus 10px gap plus 36px sidebar padding
+  // ≈ 356; round up to 360 for safety). Below this the grid collapses to
+  // one column and the intended Expansions/Placement Options + Behavior
+  // pairing breaks. The page still functions narrower than this — controls
+  // just stack vertically — but the layout becomes a different design.
+  const MIN_WIDTH = 360;
   const MAX_WIDTH = 600;
   const STORAGE_KEY = "galaxy-forge.sidebar-width";
 
