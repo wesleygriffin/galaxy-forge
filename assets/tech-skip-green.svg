@@ -1,5 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
-  <circle cx="100.00" cy="75.06" r="36.00" />
-  <circle cx="121.60" cy="112.47" r="36.00" />
-  <circle cx="78.40" cy="112.47" r="36.00" />
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;">
+    <path d="M100,39.06C119.869,39.06 136,55.191 136,75.06C136,81.778 135.435,98.393 132.088,93.093C125.606,82.832 113.729,78.143 100.578,78.143C88.691,78.143 72.2,89.362 70.415,95.664C68.393,102.803 64,83.042 64,75.06C64,55.191 80.131,39.06 100,39.06Z" style="fill:none;stroke:black;stroke-width:2px;"/>
+    <g transform="matrix(1,0,0,1,24.0892,5.05152)">
+        <circle cx="78.4" cy="112.47" r="36" style="fill:none;stroke:black;stroke-width:2px;"/>
+    </g>
 </svg>
