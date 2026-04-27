@@ -634,7 +634,7 @@
   .hex-wrapper.lifted { filter: drop-shadow(0 0 14px var(--amber-bright)) brightness(1.25); cursor: grabbing; }
   .hex-wrapper.lifted .hex-bg { stroke: var(--amber-bright); stroke-width: 4 !important; }
   .hex-number-overlay {
-    fill: var(--amber-bright); font-size: 11px; font-weight: bold;
+    fill: var(--amber-bright); font-size: 10px; font-weight: bold;
     text-anchor: middle; dominant-baseline: central;
     paint-order: stroke; stroke: #000; stroke-width: 3px;
     pointer-events: none;
@@ -819,7 +819,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.51";
+const APP_VERSION = "0.1.52";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -1640,11 +1640,13 @@ function renderHex(parent, q, r, key, tileId, isHomeSlot = false) {
     group.appendChild(txt);
   }
 
-  // Number overlay
+  // Number overlay — middle-right of the hex, sized to clear the wormhole
+  // badge (top-right) and planet labels (centered). Position chosen so the
+  // badge sits just inside the right vertex of the flat-top hex.
   if (state.showNumbers && tileId) {
-    const numBg = svgEl("circle", { cx: 0, cy: -HEX_SIZE * 0.55, r: 12, fill: "rgba(0,0,0,0.75)", stroke: "var(--amber)", "stroke-width": 1 });
+    const numBg = svgEl("circle", { cx: HEX_SIZE * 0.7, cy: 0, r: 10, fill: "rgba(0,0,0,0.75)", stroke: "var(--amber)", "stroke-width": 1 });
     group.appendChild(numBg);
-    const numText = svgEl("text", { x: 0, y: -HEX_SIZE * 0.55, class: "hex-number-overlay" });
+    const numText = svgEl("text", { x: HEX_SIZE * 0.7, y: 0, class: "hex-number-overlay" });
     numText.textContent = tileId;
     group.appendChild(numText);
   }
