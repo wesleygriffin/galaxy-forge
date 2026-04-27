@@ -818,7 +818,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.39";
+const APP_VERSION = "0.1.40";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2074,6 +2074,10 @@ function startHexDrag(e, key, tileId) {
     const hexEl = svg.querySelector(`.hex-wrapper[data-key="${cand.key}"]`);
     if (hexEl) hexEl.classList.add("lifted");
     if (navigator.vibrate) navigator.vibrate(15);
+    // Show the floating drag ghost — moved is already true at lift time, so the
+    // "first 10px of movement" branch in pointermove won't fire to do this for us.
+    showDragGhost(cand.tileId);
+    positionDragGhost(cand.startX, cand.startY);
     longPressCandidate = null;
     longPressTimer = null;
   }, LONG_PRESS_MS);
