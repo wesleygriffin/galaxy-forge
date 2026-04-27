@@ -763,6 +763,7 @@
         <label class="ctrl-label">Behavior</label>
         <div class="toggle-grid">
           <div class="toggle-row" data-toggle="auto-refresh"><div class="toggle-track"></div><div class="toggle-label">Auto-refresh</div></div>
+          <div class="toggle-row" data-toggle="randomize-homes"><div class="toggle-track"></div><div class="toggle-label">Random Home Placement<span class="toggle-sub">Fill home slots with shuffled factions</span></div></div>
         </div>
         <button class="btn-secondary" id="clear-locks-btn" title="Clear locks and filters" aria-label="Clear locks and filters" style="margin-top: 10px;">Clear<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button>
       </div>
@@ -818,7 +819,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.40";
+const APP_VERSION = "0.1.41";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -1180,6 +1181,7 @@ const state = {
   shufflePriority: false,
   reversePlacement: false,
   autoRefresh: false,       // re-forge map automatically when an option changes
+  randomizeHomes: false,    // when false, home positions render as empty green-outlined slots
   respectLocks: true,       // when false, generation ignores state.locked (but doesn't clear it)
   map: new Map(),           // key "q,r" => tileId
   locked: new Set(),        // keys of locked positions
@@ -1309,17 +1311,27 @@ function generateMap() {
   const newMap = new Map();
   newMap.set("0,0", 18); // Mecatol
 
-  // Add home systems to designated positions
-  const homes = getHomeSystems();
-  const shuffledHomes = shuffle(homes);
-  layout.homes.forEach(([q, r], i) => {
-    const key = hexKey(q, r);
-    if (lockedMap.has(key)) {
-      newMap.set(key, lockedMap.get(key));
-    } else if (shuffledHomes[i]) {
-      newMap.set(key, shuffledHomes[i].id);
-    }
-  });
+  // Add home systems to designated positions. When randomizeHomes is off (the
+  // default) we leave these slots empty — the renderer paints them as
+  // green-outlined placeholders so the layout shape is still visible. Locked
+  // home tiles are always preserved regardless of the toggle.
+  if (state.randomizeHomes) {
+    const homes = getHomeSystems();
+    const shuffledHomes = shuffle(homes);
+    layout.homes.forEach(([q, r], i) => {
+      const key = hexKey(q, r);
+      if (lockedMap.has(key)) {
+        newMap.set(key, lockedMap.get(key));
+      } else if (shuffledHomes[i]) {
+        newMap.set(key, shuffledHomes[i].id);
+      }
+    });
+  } else {
+    layout.homes.forEach(([q, r]) => {
+      const key = hexKey(q, r);
+      if (lockedMap.has(key)) newMap.set(key, lockedMap.get(key));
+    });
+  }
 
   // Reapply locked tiles
   for (const [key, tileId] of lockedMap) {
@@ -1542,31 +1554,41 @@ function render() {
   defs.appendChild(clip);
   svg.appendChild(defs);
 
+  // Precompute which positions are designated home slots so the renderer can
+  // distinguish "empty home slot" (green-outlined placeholder) from a generic
+  // empty position. This is a property of the layout, not the map data, so we
+  // derive it on each render rather than baking it into state.
+  const homeKeySet = new Set(layout.homes.map(([q, r]) => hexKey(q, r)));
+
   for (const [q, r] of layout.coords) {
     const key = hexKey(q, r);
     const tileId = state.map.get(key);
-    renderHex(g, q, r, key, tileId);
+    renderHex(g, q, r, key, tileId, homeKeySet.has(key));
   }
 }
 
-function renderHex(parent, q, r, key, tileId) {
+function renderHex(parent, q, r, key, tileId, isHomeSlot = false) {
   const { x, y } = axialToPixel(q, r);
   const sys = tileId ? SYSTEMS[tileId] : null;
+  const isEmptyHomeSlot = !sys && isHomeSlot;
 
   const group = svgEl("g", { class: "hex-wrapper", "data-key": key, transform: `translate(${x} ${y})` });
   if (state.locked.has(key)) group.classList.add("locked");
   if (state.selectedHex === key) group.classList.add("selected");
+  if (isEmptyHomeSlot) group.classList.add("empty-home-slot");
 
-  // Background
-  const fill = getHexFill(sys, tileId);
-  const stroke = getHexStroke(sys);
+  // Background — empty home slots get a green stroke and a faint dark-green
+  // tinted fill so they read as "reserved for a home" rather than just empty.
+  const fill = isEmptyHomeSlot ? "var(--green-tile)" : getHexFill(sys, tileId);
+  const stroke = isEmptyHomeSlot ? "var(--green)" : getHexStroke(sys);
   const bg = svgEl("polygon", {
     points: hexPoints(0, 0, HEX_SIZE - 1),
     fill,
     stroke,
-    "stroke-width": 2,
+    "stroke-width": isEmptyHomeSlot ? 2.5 : 2,
     class: "hex-bg",
   });
+  if (isEmptyHomeSlot) bg.setAttribute("fill-opacity", "0.35");
   group.appendChild(bg);
 
   // Inner details: prefer the mirrored tile image when we have one;
@@ -1591,6 +1613,15 @@ function renderHex(parent, q, r, key, tileId) {
     group.appendChild(tileImg);
   } else if (sys) {
     renderTileContent(group, sys, tileId);
+  } else if (isEmptyHomeSlot) {
+    // Reserved home placeholder — labeled so it's clear this slot is intended
+    // for a home system rather than just being an empty position.
+    const txt = svgEl("text", { x: 0, y: 3, class: "hex-name", fill: "var(--green)" });
+    txt.setAttribute("font-size", "10");
+    txt.setAttribute("font-weight", "700");
+    txt.setAttribute("letter-spacing", "0.12em");
+    txt.textContent = "HOME";
+    group.appendChild(txt);
   } else {
     // Empty position marker
     const txt = svgEl("text", { x: 0, y: 0, class: "hex-name", fill: "var(--text-faint)" });
@@ -1971,7 +2002,11 @@ function getUnusedTileIds() {
     .filter(id => !used.has(id))
     .filter(id => {
       const s = SYSTEMS[id];
-      return s.type !== "hyperlane" && s.type !== "special";
+      // Hide layout-internal types (hyperlanes, special) and home systems.
+      // Home tiles are tied to specific factions and shouldn't be drag-droppable
+      // from the general drawer; with the randomizeHomes toggle off the home
+      // slots stay blank by design rather than getting filled from the drawer.
+      return s.type !== "hyperlane" && s.type !== "special" && s.type !== "home";
     });
 }
 
@@ -2481,6 +2516,7 @@ function getShareState() {
     cw: state.customWeights,
     sp: state.shufflePriority,
     rp: state.reversePlacement,
+    rh: state.randomizeHomes,
     m: [...state.map.entries()],
     lk: [...state.locked],
     inc: [...state.includeTiles],
@@ -2498,6 +2534,7 @@ function loadShareState(obj) {
   state.customWeights = obj.cw || state.customWeights;
   state.shufflePriority = !!obj.sp;
   state.reversePlacement = !!obj.rp;
+  state.randomizeHomes = !!obj.rh;
   state.map = new Map(obj.m || []);
   state.locked = new Set(obj.lk || []);
   state.includeTiles = new Set(obj.inc || []);
@@ -2560,6 +2597,8 @@ function syncUIFromState() {
       el.classList.toggle("on", state.reversePlacement);
     } else if (key === "auto-refresh") {
       el.classList.toggle("on", state.autoRefresh);
+    } else if (key === "randomize-homes") {
+      el.classList.toggle("on", state.randomizeHomes);
     }
   });
   // Selects
@@ -2615,6 +2654,8 @@ document.querySelectorAll("[data-toggle]").forEach(el => {
       // share state (it describes how *this user* drives the panel, not
       // what the shared galaxy looks like).
       try { localStorage.setItem("galaxy-forge.auto-refresh", String(state.autoRefresh)); } catch (_) {}
+    } else if (key === "randomize-homes") {
+      state.randomizeHomes = !state.randomizeHomes;
     }
     syncUIFromState();
     applyOptionChange();
