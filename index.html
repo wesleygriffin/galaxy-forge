@@ -819,7 +819,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.50";
+const APP_VERSION = "0.1.51";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2458,7 +2458,14 @@ function endPointer(e) {
     const dx = e.clientX - panStart.x;
     const dy = e.clientY - panStart.y;
     if (Math.hypot(dx, dy) < TAP_SLOP) {
-      tapInfo = { x: e.clientX, y: e.clientY, t: Date.now() };
+      // Capture which hex (if any) the tap landed on so we can distinguish
+      // "double-tap on a tile" (toggle lock) from "double-tap on empty space"
+      // (reset view). When the gesture started on the svg background, pointer
+      // capture lives on the svg, so e.target is the svg and there's no hex
+      // — exactly the case where reset-view is the right action.
+      const hexEl = e.target && e.target.closest && e.target.closest(".hex-wrapper");
+      const hexKey = hexEl ? hexEl.getAttribute("data-key") : null;
+      tapInfo = { x: e.clientX, y: e.clientY, t: Date.now(), key: hexKey };
     }
   }
   activePointers.delete(e.pointerId);
@@ -2472,9 +2479,19 @@ function endPointer(e) {
       if (lastTap
           && tapInfo.t - lastTap.t < DOUBLE_TAP_MS
           && Math.hypot(tapInfo.x - lastTap.x, tapInfo.y - lastTap.y) < DOUBLE_TAP_DIST) {
-        // Double-tap → reset view with animation
-        resetViewAnimated();
-        hideTileMenu();
+        // Both taps on the same non-empty hex → toggle that tile's lock.
+        // Otherwise (empty space, or two different hexes) → reset view.
+        const sameHex = lastTap.key && tapInfo.key && lastTap.key === tapInfo.key;
+        const tileId = sameHex ? state.map.get(tapInfo.key) : undefined;
+        if (sameHex && tileId !== undefined) {
+          toggleLock(tapInfo.key);
+          hideTileMenu();
+          render();
+          updateStatus();
+        } else {
+          resetViewAnimated();
+          hideTileMenu();
+        }
         suppressClickUntil = tapInfo.t + 250;
         lastTap = null;
       } else {
@@ -2804,7 +2821,8 @@ const HELP_TEXT = {
       <li>Long-press + drag to swap tiles.</li>
       <li>Pan by dragging.</li>
       <li>Pinch to zoom.</li>
-      <li>Double-tap to reset the view.</li>
+      <li>Double-tap a tile to lock or unlock it.</li>
+      <li>Double-tap empty space to reset the view.</li>
     </ul>
     <h4>Toolbar</h4>
     <p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;color:var(--amber);"><path d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385"/><path d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0"/></svg> Forge a new galaxy. Locked tiles stay where they are; everything else gets reshuffled according to your current settings. Tap repeatedly to roll variations.</p>
