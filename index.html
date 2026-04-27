@@ -130,6 +130,9 @@
     -webkit-touch-callout: none;
   }
   #board-viewport.dragging { cursor: grabbing; }
+  /* When the map is being panned, all children (including hexes) should show the
+     grabbing cursor — without this, .hex-wrapper's own `cursor: pointer` wins. */
+  #board-viewport.dragging .hex-wrapper { cursor: grabbing; }
   .ctrl-group { margin-bottom: 16px; }
   .ctrl-grid {
     display: grid;
@@ -628,7 +631,7 @@
   #drag-ghost.show { display: flex; }
   .hex-wrapper.locked .hex-bg { stroke: var(--cyan); stroke-width: 3 !important; }
   .hex-wrapper.selected .hex-bg { stroke: var(--amber-bright); stroke-width: 4 !important; filter: drop-shadow(0 0 8px var(--amber)); }
-  .hex-wrapper.lifted { filter: drop-shadow(0 0 14px var(--amber-bright)) brightness(1.25); }
+  .hex-wrapper.lifted { filter: drop-shadow(0 0 14px var(--amber-bright)) brightness(1.25); cursor: grabbing; }
   .hex-wrapper.lifted .hex-bg { stroke: var(--amber-bright); stroke-width: 4 !important; }
   .hex-number-overlay {
     fill: var(--amber-bright); font-size: 11px; font-weight: bold;
@@ -815,7 +818,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.37";
+const APP_VERSION = "0.1.38";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -2042,36 +2045,38 @@ const LONG_PRESS_MOVE_CANCEL_PX = 10;
 
 function startHexDrag(e, key, tileId) {
   if (!tileId) return;
-  if (e.pointerType === "mouse" && e.button !== 0) return;
+  // Primary button only — ignores middle/right-click for mouse; pen tip and touch
+  // contact both report button === 0, so this check passes for all input types.
+  if (e.button !== 0) return;
 
-  if (e.pointerType === "touch") {
-    // On touch, we don't start a drag immediately — instead we arm a long-press
-    // timer. If the finger holds still for ~400ms, we "lift" the tile and enable
-    // drag-to-swap. If the finger moves before then, pan takes over (the timer
-    // is cancelled from the move handler).
-    clearLongPress();
-    longPressCandidate = { key, tileId, startX: e.clientX, startY: e.clientY, pointerId: e.pointerId };
-    longPressTimer = setTimeout(() => {
-      // Promote to lift mode: this tile is now held and can be dragged onto another.
-      const cand = longPressCandidate;
-      if (!cand) return;
-      pointerDragData = { key: cand.key, tileId: cand.tileId, startX: cand.startX, startY: cand.startY, moved: true, mode: "lift" };
-      // Cancel any in-progress pan so the map stops following the finger
-      panStart = null;
-      svg.classList.remove("dragging");
-      hideTileMenu();
-      // Visual cue + haptic nudge
-      const hexEl = svg.querySelector(`.hex-wrapper[data-key="${cand.key}"]`);
-      if (hexEl) hexEl.classList.add("lifted");
-      if (navigator.vibrate) navigator.vibrate(15);
-      longPressCandidate = null;
-      longPressTimer = null;
-    }, LONG_PRESS_MS);
-    return;
-  }
-
-  // Mouse / pen: immediate drag mode (unchanged behavior)
-  pointerDragData = { key, tileId, startX: e.clientX, startY: e.clientY, moved: false, mode: "mouse" };
+  // Unified gesture model across mouse, touchpad, pen, and touch:
+  //   • Quick press + release   → click event fires → opens the tile menu
+  //   • Press + drag            → pans the map (long-press timer is cancelled by
+  //                               the pointermove handler once movement exceeds
+  //                               LONG_PRESS_MOVE_CANCEL_PX)
+  //   • Press + hold (no move)  → "lifts" the tile after LONG_PRESS_MS, after
+  //                               which dragging onto another hex performs a swap
+  //
+  // The svg-level pointerdown also fires for the same event, arming pan in
+  // parallel. Whichever signal resolves first wins: drag motion → pan, timer
+  // expiry → lift.
+  clearLongPress();
+  longPressCandidate = { key, tileId, startX: e.clientX, startY: e.clientY, pointerId: e.pointerId };
+  longPressTimer = setTimeout(() => {
+    const cand = longPressCandidate;
+    if (!cand) return;
+    pointerDragData = { key: cand.key, tileId: cand.tileId, startX: cand.startX, startY: cand.startY, moved: true, mode: "lift" };
+    // Cancel any in-progress pan so the map stops following the cursor/finger
+    panStart = null;
+    svg.classList.remove("dragging");
+    hideTileMenu();
+    // Visual cue + haptic nudge (vibrate is a no-op on desktop)
+    const hexEl = svg.querySelector(`.hex-wrapper[data-key="${cand.key}"]`);
+    if (hexEl) hexEl.classList.add("lifted");
+    if (navigator.vibrate) navigator.vibrate(15);
+    longPressCandidate = null;
+    longPressTimer = null;
+  }, LONG_PRESS_MS);
 }
 
 function clearLongPress() {
@@ -2220,10 +2225,11 @@ document.documentElement.addEventListener("pointerleave", (e) => {
 });
 
 svg.addEventListener("pointerdown", (e) => {
-  // On mouse/pen, let the hex handler own pointerdowns on hexes (enables drag-to-swap).
-  // On touch, hex taps still fire `click` to open the menu — but a drag on a hex
-  // should pan the map, so we don't bail out here.
-  if (e.pointerType !== "touch" && e.target.closest(".hex-wrapper")) return;
+  // Pointerdowns on hexes don't bail out — they arm pan in parallel with the
+  // hex's long-press timer (see startHexDrag). A drag will cancel the long-press
+  // and pan; a hold will cancel the pan and lift the tile. A quick tap fires
+  // `click` and opens the tile menu. This is uniform across mouse, touchpad,
+  // pen, and touch.
 
   // Any new gesture cancels any in-flight momentum from a previous fling.
   cancelMomentum();
