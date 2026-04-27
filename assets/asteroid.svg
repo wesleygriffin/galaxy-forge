@@ -1,3 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
-  <path d="M 100.00 22.00 C 110.25 22.81, 132.82 13.03, 143.19 18.77 C 153.57 24.50, 154.93 44.91, 162.26 56.41 C 169.58 67.91, 183.11 75.24, 187.14 87.75 C 191.18 100.26, 192.95 120.51, 186.45 131.47 C 179.96 142.42, 159.98 143.98, 148.18 153.51 C 136.37 163.03, 128.45 184.39, 115.63 188.63 C 102.81 192.87, 83.54 185.01, 71.27 178.93 C 59.00 172.86, 51.97 159.99, 42.03 152.19 C 32.10 144.39, 13.63 141.87, 11.67 132.15 C 9.71 122.43, 27.96 106.42, 30.27 93.90 C 32.58 81.37, 20.97 66.09, 25.52 57.00 C 30.07 47.91, 48.19 46.56, 57.56 39.38 C 66.92 32.20, 74.63 16.82, 81.70 13.92 C 88.78 11.03, 89.75 21.19, 100.00 22.00 Z" />
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;">
+    <path d="M112.937,6.88C120.017,3.99 170.876,24.706 181.246,30.446C191.626,36.176 192.817,147.411 181.017,156.941C169.207,166.461 127.095,185.135 114.275,189.375C101.455,193.615 13.63,141.87 11.67,132.15C9.71,122.43 7.374,74.213 11.924,65.123C16.474,56.033 105.867,9.78 112.937,6.88Z" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;"/>
 </svg>
