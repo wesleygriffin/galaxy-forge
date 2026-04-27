@@ -819,7 +819,7 @@
 <script>
 /* Bump this when shipping a noticeable change. Rendered as small dimmed
    text next to the 'Galaxy Forge' title inside the settings overlay. */
-const APP_VERSION = "0.1.52";
+const APP_VERSION = "0.1.53";
 (() => {
   const el = document.getElementById("settings-version");
   if (el) el.textContent = "v" + APP_VERSION;
@@ -1693,13 +1693,24 @@ function renderHex(parent, q, r, key, tileId, isHomeSlot = false) {
     e.stopPropagation();
     if (Date.now() < suppressClickUntil) return; // swallow clicks after double-tap reset
     if (!tileId) return;
-    // Tap the same hex again to close the menu (toggle behavior)
     const menuOpen = document.getElementById("tile-menu").classList.contains("show");
+    // Tap the same hex while its menu is open → close immediately (toggle).
     if (menuOpen && state.selectedHex === key) {
       hideTileMenu();
-    } else {
-      showTileMenu(key, tileId, x, y);
+      return;
     }
+    // Otherwise defer the open until the double-tap window has passed.
+    // Without this delay, the menu pops up under the user's finger between
+    // the two taps of a double-tap-to-lock gesture and intercepts the second
+    // tap. clearPendingMenu() inside hideTileMenu cancels this if a competing
+    // gesture (lock detection, drag, pinch, regenerate) wins first.
+    clearPendingMenu();
+    if (menuOpen) hideTileMenu();
+    pendingMenuTimer = setTimeout(() => {
+      pendingMenuTimer = null;
+      if (Date.now() < suppressClickUntil) return;
+      showTileMenu(key, tileId, x, y);
+    }, DOUBLE_TAP_MS + 20);
   });
 
   // Drag handlers (native)
@@ -1972,6 +1983,7 @@ function showTileMenu(key, tileId, cx, cy) {
 }
 
 function hideTileMenu() {
+  clearPendingMenu();
   document.getElementById("tile-menu").classList.remove("show");
   state.selectedHex = null;
   render();
@@ -2429,6 +2441,14 @@ const DOUBLE_TAP_DIST = 40;
 const TAP_SLOP = 10;
 let lastTap = null;           // { x, y, t }
 let suppressClickUntil = 0;   // timestamp before which to swallow synthesized click events
+let pendingMenuTimer = null;  // deferred showTileMenu so a quick second tap can lock instead
+
+function clearPendingMenu() {
+  if (pendingMenuTimer !== null) {
+    clearTimeout(pendingMenuTimer);
+    pendingMenuTimer = null;
+  }
+}
 
 function resetViewAnimated() {
   cancelMomentum();
